@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Утечка находит забытые подписки, пробники и дубли в выписке Kaspi и других банков Казахстана.">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Утечка</title>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -348,7 +348,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     <div class="sec-head">
       <div class="eyebrow">Рабочий MVP</div>
       <h2>Загрузите выписку или посмотрите на примере</h2>
-      <p>Подходит текст из PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.</p>
+      <p>Подходят PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.</p>
     </div>
 
     <div class="app" id="app">
@@ -360,13 +360,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
         <div class="app-tools">
           <button class="btn ghost small" id="btnDemo" type="button">Пример</button>
           <button class="btn ghost small" id="btnPaste" type="button">Вставить текст</button>
-          <label class="btn primary small" for="fileInput" style="cursor:pointer">Загрузить CSV</label>
-          <input type="file" id="fileInput" accept=".csv,.txt,text/csv" hidden>
+          <label class="btn primary small" for="fileInput" style="cursor:pointer">Загрузить PDF или CSV</label>
+          <input type="file" id="fileInput" accept=".pdf,.csv,.txt,application/pdf,text/csv" hidden>
         </div>
       </div>
 
       <div class="drop" id="drop">
-        <p><b>Перетащите сюда CSV-выписку</b> или откройте PDF-выписку Kaspi, выделите весь текст (Ctrl+A), скопируйте и вставьте через «Вставить текст». Достаточно 3–6 месяцев.</p>
+        <p><b>Перетащите сюда PDF-выписку Kaspi или CSV-файл.</b> В Kaspi: Kaspi Gold → Выписка → выберите период → скачайте PDF. Достаточно 3–6 месяцев.</p>
         <span class="pill mute" id="parseInfo">—</span>
       </div>
       <div class="paste" id="pasteBox" hidden>
@@ -519,7 +519,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
       <h2>От страницы до продукта за год</h2>
     </div>
     <div class="road">
-      <div class="now"><div class="q">Q4 2026 · сейчас</div><h3>MVP</h3><ul><li>Детектор по CSV и тексту выписки Kaspi</li><li>Справочник сервисов РК</li><li>Лендинг и сбор контактов</li></ul></div>
+      <div class="now"><div class="q">Q4 2026 · сейчас</div><h3>MVP</h3><ul><li>Детектор по PDF Kaspi и CSV</li><li>Справочник сервисов РК</li><li>Лендинг и сбор контактов</li></ul></div>
       <div><div class="q">Q1 2027</div><h3>Telegram-бот</h3><ul><li>Чтение PDF Kaspi, Halyk, Freedom</li><li>Бот на казахском языке</li><li>Вход по номеру телефона и SMS</li><li>Напоминания и запуск Pro</li></ul></div>
       <div><div class="q">Q2 2027</div><h3>Агент отмены</h3><ul><li>Автоотмена в топ-30 сервисов</li><li>Возвраты по претензиям</li><li>Узбекистан и Кыргызстан</li></ul></div>
       <div><div class="q">Q3–Q4 2027</div><h3>B2B</h3><ul><li>SDK для банков</li><li>Пилот с одним банком РК</li><li>Раунд seed</li></ul></div>
@@ -595,12 +595,12 @@ const DICT={
 "НАЙДЕНО 4":["4 ТАБЫЛДЫ","4 FOUND"],
 "Рабочий MVP":["Жұмыс істейтін MVP","Working MVP"],
 "Загрузите выписку или посмотрите на примере":["Үзіндіні жүктеңіз немесе үлгіні қараңыз","Upload a statement or try the sample"],
-"Подходит текст из PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.":["Kaspi мен Halyk PDF-үзінділерінің мәтіні, сондай-ақ Freedom, Jusan, Forte CSV файлдары және «күні», «сомасы», «сипаттамасы» бағандары бар кез келген кесте жарайды. Қазір Айдардың 7 айлық үлгі үзіндісі ашық, бұл сіздің деректеріңіз емес.","Works with text from Kaspi and Halyk PDF statements, CSV from Freedom, Jusan and Forte, and any table with date, amount and description columns. You are looking at Aidar's 7-month sample statement, not your data."],
+"Подходят PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.":["Kaspi мен Halyk PDF-үзінділері, сондай-ақ Freedom, Jusan, Forte CSV файлдары және «күні», «сомасы», «сипаттамасы» бағандары бар кез келген кесте жарайды. Қазір Айдардың 7 айлық үлгі үзіндісі ашық, бұл сіздің деректеріңіз емес.","Works with Kaspi and Halyk PDF statements, CSV from Freedom, Jusan and Forte, and any table with date, amount and description columns. You are looking at Aidar's 7-month sample statement, not your data."],
 "Пример":["Үлгі","Sample"],
 "Вставить текст":["Мәтін қою","Paste text"],
-"Загрузить CSV":["CSV жүктеу","Upload CSV"],
-"Перетащите сюда CSV-выписку":["CSV-үзіндіні осында сүйреңіз","Drop a CSV statement here"],
-"или откройте PDF-выписку Kaspi, выделите весь текст (Ctrl+A), скопируйте и вставьте через «Вставить текст». Достаточно 3–6 месяцев.":["немесе Kaspi PDF-үзіндісін ашып, бүкіл мәтінді белгілеп (Ctrl+A), көшіріп, «Мәтін қою» арқылы қойыңыз. 3–6 ай жеткілікті.","or open a Kaspi PDF statement, select all text (Ctrl+A), copy it and use “Paste text”. 3–6 months is enough."],
+"Загрузить PDF или CSV":["PDF немесе CSV жүктеу","Upload PDF or CSV"],
+"Перетащите сюда PDF-выписку Kaspi или CSV-файл.":["Kaspi PDF-үзіндісін немесе CSV файлын осында сүйреңіз.","Drop a Kaspi PDF statement or a CSV file here."],
+"В Kaspi: Kaspi Gold → Выписка → выберите период → скачайте PDF. Достаточно 3–6 месяцев.":["Kaspi-де: Kaspi Gold → Үзінді → кезеңді таңдап → PDF жүктеңіз. 3–6 ай жеткілікті.","In Kaspi: Kaspi Gold → Statement → pick a period → download the PDF. 3–6 months is enough."],
 "Найти утечки":["Шығындарды табу","Find leaks"],
 "Показать формат примера":["Үлгі форматын көрсету","Show sample format"],
 "Регулярных платежей":["Тұрақты төлемдер","Recurring payments"],
@@ -706,7 +706,7 @@ const DICT={
 "Автоотмена упирается в разные интерфейсы сервисов. Начинаем с топ-30 сервисов, остальным даём инструкции.":["Автоматты бас тарту сервистердің әртүрлі интерфейстеріне тіреледі. Топ-30 сервистен бастаймыз, қалғандарына нұсқаулық береміз.","Auto-cancel runs into different service interfaces. We start with the top 30 services and give instructions for the rest."],
 "От страницы до продукта за год":["Беттен өнімге дейін бір жылда","From page to product in a year"],
 "Q4 2026 · сейчас":["Q4 2026 · қазір","Q4 2026 · now"],
-"Детектор по CSV и тексту выписки Kaspi":["CSV және Kaspi үзінді мәтіні бойынша детектор","Detector for CSV and Kaspi statement text"],
+"Детектор по PDF Kaspi и CSV":["Kaspi PDF және CSV бойынша детектор","Detector for Kaspi PDFs and CSV"],
 "Справочник сервисов РК":["ҚР сервистерінің анықтамалығы","Catalog of Kazakhstan services"],
 "Лендинг и сбор контактов":["Лендинг және контактілер жинау","Landing page and lead capture"],
 "Telegram-бот":["Telegram-бот","Telegram bot"],
@@ -860,20 +860,64 @@ function parseAmount(s){
   if(/,\d{1,2}$/.test(s))s=s.replace(/\./g,"").replace(",",".");else s=s.replace(/,/g,"");
   return parseFloat(s);
 }
-/* текст из PDF-выписки (Kaspi, Halyk): «05.10.26  - 2 290,00 ₸  Покупки  YANDEX*PLUS» */
+/* текст из PDF-выписки. Kaspi: «05.10.26  - 2 290,00 ₸  Покупки  YANDEX*PLUS»;
+   Halyk и другие: «05.10.2026 06.10.2026 Покупка YANDEX.PLUS -2 290,00 KZT 0,00» */
+const OPS=/^(Покупки|Покупка|Переводы|Перевод|Пополнение|Снятия|Снятие|Платежи|Платеж|Платёж|Разное|Оплата|Списание)\s+/i;
+const INCOME=/(Пополнение|Зарплата|Поступление|Перевод от|Возврат|Кешбэк|Cashback)/i;
 function parseLines(text){
-  const re=/(\d{2}\.\d{2}\.\d{2,4})\s+([+\-−–]?\s?\d[\d  ]*[.,]\d{2})\s*(?:₸|KZT|тг)?\s+(.+)/i;
+  const amtRe=/([+\-−–]\s?)?\d{1,3}(?:[  ]\d{3})*[.,]\d{2}(?!\d)\s*(₸|KZT|тг)?/gi;
   const tx=[];
-  for(const line of text.split(/\r?\n/)){
-    const m=line.match(re);if(!m)continue;
-    const d=parseDate(m[1]),a=parseAmount(m[2]);
-    const t=m[3].replace(/^(Покупки|Покупка|Переводы|Перевод|Пополнение|Снятия|Снятие|Платежи|Платеж|Платёж|Разное)\s+/i,"").trim();
-    if(d&&isFinite(a)&&a!==0&&t)tx.push({d,a,t,op:m[3]});
+  for(const raw of text.split(/\r?\n/)){
+    const line=raw.replace(/\s+/g," ").trim();
+    const dm=line.match(/^(\d{2}\.\d{2}\.\d{2,4})(?!\d)/);if(!dm)continue;
+    const d=parseDate(dm[1]);if(!d)continue;
+    let rest=line.slice(dm[0].length).replace(/^(\s*(\d{2}\.\d{2}\.\d{2,4}|\d{1,2}:\d{2}(:\d{2})?))+/,"");
+    const all=[...rest.matchAll(amtRe)].map(m=>({s:m[0],signed:!!m[1],cur:!!m[2],a:parseAmount(m[0])}));
+    const found=all.filter(m=>isFinite(m.a)&&m.a!==0);
+    if(!found.length)continue;
+    const pick=found.find(m=>m.signed||m.cur)||found[0];
+    let desc=rest;for(const m of all)desc=desc.replace(m.s," ");
+    desc=desc.replace(/\b(KZT|RUB|USD)\b|₸|тг/gi," ").replace(/\s+/g," ").trim();
+    const op=desc;desc=desc.replace(OPS,"").trim();
+    if(!/[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі]/.test(desc))continue;
+    tx.push({d,a:pick.a,t:desc,op,signed:pick.signed});
   }
   if(tx.length<3)return null;
   const hasSign=tx.some(x=>x.a<0);
-  const out=tx.filter(x=>hasSign?x.a<0:!/^(Пополнение|Зарплата)/i.test(x.op)).map(x=>({d:x.d,a:Math.abs(x.a),t:x.t}));
+  const out=tx.filter(x=>hasSign?x.a<0:!INCOME.test(x.op)).map(x=>({d:x.d,a:Math.abs(x.a),t:x.t}));
   return {tx:out,total:tx.length};
+}
+
+/* PDF: pdf.js грузится с cdnjs только при первом PDF; воркер подключаем скриптом,
+   чтобы он работал в основном потоке (Worker с чужого домена браузер не пустит). */
+let pdfReady=null;
+function loadScript(src){return new Promise((res,rej)=>{const el=document.createElement("script");el.src=src;el.onload=res;el.onerror=()=>rej(new Error("load"));document.head.appendChild(el)})}
+function ensurePdf(){
+  const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+  if(!pdfReady)pdfReady=loadScript(base+"pdf.min.js").then(()=>loadScript(base+"pdf.worker.min.js")).then(()=>{
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+"pdf.worker.min.js";return window.pdfjsLib});
+  pdfReady.catch(()=>{pdfReady=null});
+  return pdfReady;
+}
+async function pdfToText(buf){
+  const lib=await ensurePdf();
+  const doc=await lib.getDocument({data:buf,isEvalSupported:false}).promise;
+  const out=[];
+  for(let n=1;n<=doc.numPages;n++){
+    const page=await doc.getPage(n);
+    const tc=await page.getTextContent();
+    const rows=[];
+    for(const it of tc.items){
+      if(!it.str||!it.str.trim())continue;
+      const x=it.transform[4],y=it.transform[5];
+      let r=rows.find(r=>Math.abs(r.y-y)<3);
+      if(!r){r={y,items:[]};rows.push(r)}
+      r.items.push({x,s:it.str});
+    }
+    rows.sort((a,b)=>b.y-a.y);
+    for(const r of rows)out.push(r.items.sort((a,b)=>a.x-b.x).map(i=>i.s).join(" "));
+  }
+  return out.join("\n");
 }
 function parseStatement(text){
   const lines=parseLines(text);
@@ -1176,7 +1220,24 @@ $("#btnPaste").onclick=()=>{$("#pasteBox").hidden=!$("#pasteBox").hidden;if(!$("
 $("#btnAnalyze").onclick=()=>{const t=$("#pasteArea").value.trim();if(!t){$("#err").textContent=L("Вставьте содержимое выписки в поле выше.","Үзінді мәтінін жоғарыдағы өріске қойыңыз.","Paste the statement text into the field above.");$("#err").hidden=false;return}load(t,L("вставленный текст","қойылған мәтін","pasted text"))};
 $("#btnShowDemoCsv").onclick=()=>{$("#pasteArea").value=demoCSV().split("\n").slice(0,12).join("\n")+"\n…"};
 $("#fileInput").onchange=e=>{const f=e.target.files[0];if(f)readFile(f)};
-function readFile(f){if(/\.pdf$/i.test(f.name)||f.type==="application/pdf"){$("#err").textContent=L("PDF пока не читаем напрямую. Откройте выписку, выделите весь текст (Ctrl+A), скопируйте и вставьте через «Вставить текст».","PDF-ті әзірге тікелей оқымаймыз. Үзіндіні ашып, бүкіл мәтінді белгілеп (Ctrl+A), көшіріп, «Мәтін қою» арқылы қойыңыз.","We can't read PDFs directly yet. Open the statement, select all text (Ctrl+A), copy it and use “Paste text”.");$("#err").hidden=false;$("#pasteBox").hidden=false;return}const r=new FileReader();r.onload=()=>{let t=r.result;if(/\uFFFD/.test(t.slice(0,500))){const r2=new FileReader();r2.onload=()=>load(r2.result,f.name);r2.readAsText(f,"windows-1251");return}load(t,f.name)};r.readAsText(f,"utf-8")}
+function readFile(f){if(/\.pdf$/i.test(f.name)||f.type==="application/pdf"){readPdf(f);return}const r=new FileReader();r.onload=()=>{let t=r.result;if(/\uFFFD/.test(t.slice(0,500))){const r2=new FileReader();r2.onload=()=>load(r2.result,f.name);r2.readAsText(f,"windows-1251");return}load(t,f.name)};r.readAsText(f,"utf-8")}
+async function readPdf(f){
+  $("#err").hidden=true;
+  $("#parseInfo").textContent=L("Читаем PDF…","PDF оқылып жатыр…","Reading PDF…");
+  let text;
+  try{text=await pdfToText(await f.arrayBuffer())}
+  catch(e){
+    const pw=e&&e.name==="PasswordException";
+    $("#err").textContent=pw?L("PDF защищён паролем. Скачайте выписку без пароля и попробуйте снова.","PDF құпиясөзбен қорғалған. Үзіндіні құпиясөзсіз жүктеп, қайта көріңіз.","The PDF is password-protected. Download the statement without a password and try again.")
+      :L("Не удалось открыть PDF. Проверьте файл или вставьте текст выписки через «Вставить текст».","PDF ашылмады. Файлды тексеріңіз немесе үзінді мәтінін «Мәтін қою» арқылы қойыңыз.","Couldn't open the PDF. Check the file or paste the statement text via “Paste text”.");
+    $("#err").hidden=false;infoText();return;
+  }
+  if(!parseLines(text)){
+    $("#err").textContent=L("В PDF не нашли операций. Если это скан или фото выписки, скачайте в банке PDF-выписку с текстом.","PDF-те операциялар табылмады. Егер бұл скан немесе фото болса, банктен мәтіні бар PDF-үзінді жүктеңіз.","No transactions found in the PDF. If it's a scan or photo, download a text PDF statement from your bank.");
+    $("#err").hidden=false;infoText();return;
+  }
+  load(text,f.name);
+}
 const drop=$("#app");
 ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();$("#drop").classList.add("over")}));
 ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();if(ev==="drop"||!drop.contains(e.relatedTarget))$("#drop").classList.remove("over")}));
