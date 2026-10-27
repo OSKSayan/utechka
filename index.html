@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Утечка находит забытые подписки, пробники и дубли в выписке Kaspi и других банков Казахстана.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Утечка</title>
+</head>
+<body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: банковская выписка как материал — холодная бумага, моно-цифры, одна красная «утечка» как единственный акцент тревоги */
+:root{
+  --paper:#EEF1F5; --surface:#FFFFFF; --sunk:#E4E8EF;
+  --ink:#0E1726; --muted:#5A6678; --line:#D5DBE4;
+  --accent:#2346D8; --accent-soft:#E2E8FF; --on-accent:#FFFFFF;
+  --leak:#D93F22; --leak-soft:#FDE7E1;
+  --ok:#11845A; --ok-soft:#DDF3EA;
+  --warn:#9A6408; --warn-soft:#FBF0D9;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0A0F18; --surface:#111927; --sunk:#0D1420;
+  --ink:#E7ECF4; --muted:#8C98AB; --line:#222F44;
+  --accent:#7F98FF; --accent-soft:#1A2550; --on-accent:#0A0F18;
+  --leak:#FF6A4D; --leak-soft:#3A1A14;
+  --ok:#3FCB8E; --ok-soft:#0F2E22;
+  --warn:#E8AE45; --warn-soft:#33260C;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0A0F18; --surface:#111927; --sunk:#0D1420;
+  --ink:#E7ECF4; --muted:#8C98AB; --line:#222F44;
+  --accent:#7F98FF; --accent-soft:#1A2550; --on-accent:#0A0F18;
+  --leak:#FF6A4D; --leak-soft:#3A1A14;
+  --ok:#3FCB8E; --ok-soft:#0F2E22;
+  --warn:#E8AE45; --warn-soft:#33260C;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h2{font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1.12;font-weight:700}
+h3{font-size:1.05rem;font-weight:700;line-height:1.3}
+p{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--accent)}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* nav */
+nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:.04em;text-decoration:none;color:var(--ink)}
+.logo svg{flex:none}
+.links{display:flex;gap:22px;font-weight:600;font-size:.92rem}
+.links a{color:var(--muted);text-decoration:none}
+.links a:hover{color:var(--ink)}
+.links a,.btn{white-space:nowrap}
+@media (max-width:1100px){.links{display:none}}
+.nav-r{display:flex;align-items:center;gap:10px}
+.acc-chip{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:600;font-size:.85rem;padding:3px 12px 3px 3px;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--line);white-space:nowrap;max-width:200px}
+.acc-chip:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.acc-chip img{width:28px;height:28px;border-radius:50%;flex:none}
+.acc-chip span{overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){.acc-chip span{display:none}.acc-chip{padding:3px}}
+.cab{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:grid;gap:16px}
+.cab-head{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.cab-head img{width:48px;height:48px;border-radius:50%;flex:none}
+.cab-head .who{min-width:0;flex:1}
+.cab-head .who p{color:var(--muted);font-size:.9rem;margin-top:2px}
+.cab-list{display:grid;gap:8px}
+.cab-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--sunk)}
+.cab-row.cur{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.cab-row .t{font-weight:700;overflow-wrap:anywhere}
+.cab-row .m{font-size:.82rem;color:var(--muted)}
+.cab-row .lk{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--leak);font-weight:600;white-space:nowrap}
+.cab-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn.danger{color:var(--leak);box-shadow:inset 0 0 0 1.5px var(--leak)}
+.cab-note{color:var(--muted);font-size:.92rem}
+@media (max-width:560px){.cab-row{grid-template-columns:1fr}}
+@media (max-width:520px){.nav-r .nav-cta{display:none}}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 20px;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .15s ease,background .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn.ghost:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.btn.small{padding:8px 14px;font-size:.88rem}
+
+/* hero */
+.hero{padding-block:56px 36px}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:32px}}
+.hero h1{font-size:clamp(2.3rem,6vw,4.4rem);line-height:1.02;font-weight:800}
+.hero h1 .drip{color:var(--leak);position:relative;white-space:nowrap}
+.hero .lede{font-size:1.15rem;color:var(--muted);max-width:52ch;margin-top:20px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.hero .note{margin-top:16px;font-size:.85rem;color:var(--muted);display:flex;gap:8px;align-items:center}
+.receipt{background:var(--surface);border-radius:6px;padding:22px 22px 30px;font-family:var(--mono);font-size:.82rem;box-shadow:0 1px 0 var(--line),0 24px 48px -24px color-mix(in srgb,var(--ink) 30%,transparent);position:relative;transform:rotate(1.2deg);
+  -webkit-mask:linear-gradient(#000 0 0) top/100% calc(100% - 12px) no-repeat,radial-gradient(circle 7px at 50% 100%,transparent 6.5px,#000 7px) bottom/16px 12px repeat-x;
+          mask:linear-gradient(#000 0 0) top/100% calc(100% - 12px) no-repeat,radial-gradient(circle 7px at 50% 100%,transparent 6.5px,#000 7px) bottom/16px 12px repeat-x}
+.receipt .rh{display:flex;justify-content:space-between;color:var(--muted);border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:8px}
+.receipt .row{display:flex;justify-content:space-between;gap:12px;padding:5px 0}
+.receipt .row.hit{color:var(--leak)}
+.receipt .row.hit span:first-child::before{content:"● ";}
+.receipt .tot{border-top:1px dashed var(--line);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:600}
+.receipt .tot b{color:var(--leak)}
+.stamp{position:absolute;right:22px;top:46%;transform:rotate(-12deg);border:2px solid var(--leak);color:var(--leak);font-family:var(--display);font-weight:800;font-size:.8rem;padding:6px 10px;border-radius:6px;letter-spacing:.06em;opacity:.9}
+
+/* sections */
+section.block{padding-block:72px}
+.sec-head{display:grid;gap:12px;max-width:760px;margin-bottom:36px}
+.sec-head p{color:var(--muted);font-size:1.05rem}
+.band{background:var(--surface);border-block:1px solid var(--line)}
+
+/* app */
+.app{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.app-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--sunk)}
+.app-bar .dots{display:flex;gap:6px}.app-bar .dots i{width:10px;height:10px;border-radius:50%;background:var(--line);display:block}
+.app-bar .file{font-family:var(--mono);font-size:.8rem;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-tools{display:flex;gap:8px;flex-wrap:wrap}
+.drop{margin:18px;border:2px dashed var(--line);border-radius:14px;padding:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop p{color:var(--muted);font-size:.92rem;min-width:0}
+.drop b{color:var(--ink)}
+.paste{margin:0 18px 18px}
+.paste textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:12px;background:var(--sunk);padding:12px;font-family:var(--mono);font-size:.78rem;resize:vertical}
+.paste .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.err{margin:0 18px 18px;padding:12px 14px;border-radius:10px;background:var(--leak-soft);color:var(--leak);font-weight:600;font-size:.92rem}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kpi{padding:18px;border-right:1px solid var(--line);min-width:0}
+.kpi:last-child{border-right:0}
+.kpi .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:clamp(1.3rem,2.6vw,1.9rem);font-weight:600;line-height:1.1;margin-top:6px}
+.kpi.leak{background:var(--leak-soft)}
+.kpi.leak .v{color:var(--leak)}
+.kpi .s{font-size:.8rem;color:var(--muted);margin-top:4px}
+@media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(2){border-right:0}.kpi:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+
+.app-body{display:grid;grid-template-columns:1fr 320px;min-height:0}
+@media (max-width:960px){.app-body{grid-template-columns:1fr}}
+.list{min-width:0;border-right:1px solid var(--line)}
+@media (max-width:960px){.list{border-right:0;border-bottom:1px solid var(--line)}}
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--sunk);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:999px;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 15%,transparent)}
+.sub{border-bottom:1px solid var(--line)}
+.sub:last-child{border-bottom:0}
+.sub-row{display:grid;grid-template-columns:44px 1fr auto auto;gap:14px;align-items:center;padding:14px 18px;cursor:pointer}
+.sub-row:hover{background:var(--sunk)}
+.ava{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:.95rem;color:#fff}
+.sub-main{min-width:0}
+.sub-name{font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sub-meta{font-size:.82rem;color:var(--muted);margin-top:2px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pill{font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:10px;max-width:100%;overflow-wrap:anywhere}
+.pill.leak{background:var(--leak-soft);color:var(--leak)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.mute{background:var(--sunk);color:var(--muted)}
+.sub-amt{text-align:right}
+.sub-amt .m{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600}
+.sub-amt .y{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.78rem;color:var(--muted)}
+.tog{position:relative;width:46px;height:28px;flex:none}
+.tog input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.tog span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.tog span::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);transition:transform .18s cubic-bezier(.3,.7,.4,1);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tog input:checked + span{background:var(--leak)}
+.tog input:checked + span::after{transform:translateX(18px)}
+.tog input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:560px){.sub-row{grid-template-columns:40px 1fr auto;}.sub-amt{grid-column:2;text-align:left;display:flex;gap:10px;align-items:baseline}.ava{width:40px;height:40px}.tog{grid-row:1;grid-column:3}}
+.sub-detail{padding:0 18px 18px 76px;display:grid;gap:14px}
+@media (max-width:560px){.sub-detail{padding-left:18px}}
+.why{font-size:.9rem;color:var(--muted)}
+.why b{color:var(--ink)}
+.hist{display:flex;gap:4px;align-items:flex-end;height:40px}
+.hist i{flex:1;max-width:22px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.75;display:block}
+.hist i.first{background:var(--warn)}
+.steps{margin:0;padding-left:20px;font-size:.9rem;display:grid;gap:4px}
+.letter{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px;font-family:var(--mono);font-size:.76rem;white-space:pre-wrap;max-height:220px;overflow:auto}
+.essentials-note{padding:12px 18px;font-size:.85rem;color:var(--muted);background:var(--sunk)}
+
+.side{padding:18px;display:grid;gap:22px;align-content:start;min-width:0}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--mono);font-size:10px}
+.legend{display:flex;gap:14px;font-size:.78rem;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.cats{display:grid;gap:8px}
+.cat{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:.85rem}
+.cat .bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.cat .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.privacy{font-size:.8rem;color:var(--muted);display:flex;gap:8px;align-items:flex-start;padding:12px;border-radius:10px;background:var(--ok-soft)}
+.privacy svg{flex:none;margin-top:2px;color:var(--ok)}
+
+.savebar{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 18px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper)}
+.savebar .big{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:1.25rem}
+.savebar .sm{font-size:.82rem;opacity:.75}
+.savebar .btn{background:var(--paper);color:var(--ink)}
+
+/* how */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:2px solid var(--ink)}
+.how > div{padding:22px 22px 0 0;display:grid;gap:10px;align-content:start}
+.how .n{font-family:var(--mono);color:var(--leak);font-weight:600}
+.how p{color:var(--muted);font-size:.95rem}
+@media (max-width:760px){.how{grid-template-columns:1fr}.how > div{padding:18px 0;border-bottom:1px solid var(--line)}}
+
+/* pitch */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media (max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:grid;gap:10px;align-content:start;min-width:0}
+.card p,.card li{color:var(--muted);font-size:.95rem}
+.card ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.tier .price{font-family:var(--mono);font-size:1.8rem;font-weight:600;color:var(--ink)}
+.tier .price small{font-size:.85rem;color:var(--muted);font-weight:400}
+.tier.hl{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+
+.funnel{display:grid;gap:10px}
+.fstep{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px;padding:16px 18px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.fstep .lab{font-weight:700}
+.fstep .calc{font-size:.84rem;color:var(--muted);font-family:var(--mono)}
+.fstep .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:1.3rem;text-align:right}
+.fstep:nth-child(2){margin-left:6%}.fstep:nth-child(3){margin-left:12%;border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:600px){.fstep:nth-child(n){margin-left:0}.fstep{grid-template-columns:1fr}.fstep .val{text-align:left}}
+.disclaim{font-size:.8rem;color:var(--muted);margin-top:12px}
+
+.calc-ui{display:grid;grid-template-columns:1fr 1fr;gap:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+@media (max-width:860px){.calc-ui{grid-template-columns:1fr}}
+.slider{display:grid;gap:6px}
+.slider label{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600;gap:10px}
+.slider label span{font-family:var(--mono);color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.out{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+.out div{background:var(--sunk);border-radius:12px;padding:14px;min-width:0}
+.out .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.35rem;font-weight:600;margin-top:4px}
+.out .wide{grid-column:1/-1}
+.verdict{font-weight:700}
+
+.compare{width:100%;border-collapse:collapse;font-size:.92rem;min-width:620px}
+.compare th,.compare td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line)}
+.compare th{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.compare td:first-child{font-weight:700}
+.compare tr.us td{background:var(--accent-soft)}
+.y{color:var(--ok);font-weight:700}.n{color:var(--muted)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+
+.road{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+.road::before{content:"";position:absolute;left:0;right:0;top:9px;height:2px;background:var(--line)}
+.road > div{position:relative;padding:28px 18px 0 0;display:grid;gap:8px;align-content:start}
+.road > div::before{content:"";position:absolute;left:0;top:2px;width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--line)}
+.road > div.now::before{background:var(--leak);border-color:var(--leak);box-shadow:0 0 0 5px var(--leak-soft)}
+.road .q{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.road ul{margin:0;padding-left:16px;color:var(--muted);font-size:.9rem;display:grid;gap:4px}
+@media (max-width:860px){.road{grid-template-columns:1fr 1fr;row-gap:28px}}
+@media (max-width:520px){.road{grid-template-columns:1fr}.road::before{display:none}}
+
+.todo{display:grid;gap:8px}
+.todo label{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);cursor:pointer}
+.todo input{margin-top:4px;accent-color:var(--accent);width:18px;height:18px;flex:none}
+.todo input:checked + span{text-decoration:line-through;color:var(--muted)}
+.todo .d{font-family:var(--mono);font-size:.75rem;color:var(--muted);display:block}
+
+.ask{background:var(--ink);color:var(--paper);border-radius:24px;padding:40px;display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:center}
+.ask h2{color:var(--paper)}
+.ask p{opacity:.75;margin-top:12px}
+.ask .use{display:grid;gap:10px}
+.ask .use div{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font-size:.92rem}
+.ask .use b{font-family:var(--mono)}
+.ask .use i{height:8px;border-radius:4px;background:var(--leak);display:block}
+@media (max-width:860px){.ask{grid-template-columns:1fr;padding:28px}}
+
+footer{padding-block:40px;color:var(--muted);font-size:.85rem}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@keyframes drip{0%{transform:translateY(-2px) scaleY(.8);opacity:0}30%{opacity:1}100%{transform:translateY(8px) scaleY(1.1);opacity:0}}
+.logo .dropani{animation:drip 2.4s ease-in infinite;transform-origin:center top}
+@keyframes rise{from{transform:translateY(6px)}to{transform:none}}
+.sub{animation:rise .35s ease both}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:50}
+</style>
+
+<nav class="top">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Утечка — наверх">
+      <svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><path d="M11 1C11 1 2 11.5 2 17.5a9 9 0 0 0 18 0C20 11.5 11 1 11 1Z" fill="var(--leak)"/><circle class="dropani" cx="11" cy="28" r="1.6" fill="var(--leak)"/></svg>
+      УТЕЧКА
+    </a>
+    <div class="links">
+      <a href="#demo">Демо</a><a href="#how">Как работает</a><a href="#money">Бизнес</a><a href="#road">Роадмап</a><a href="#plan">План на 30 дней</a>
+    </div>
+    <div class="nav-r">
+      <a class="acc-chip" id="accChip" href="#cabinet" hidden></a>
+      <div class="seg" id="langSeg" role="group" aria-label="Язык">
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang="kk" aria-pressed="false">KZ</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn primary small nav-cta" href="#demo">Проверить выписку</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Стартап из Казахстана · pre-seed · MVP работает прямо на этой странице</div>
+      <h1 style="margin-top:14px">Ваши деньги утекают <span class="drip">по 1 990 ₸</span></h1>
+      <p class="lede">Забытые подписки, «пробный период за 1 ₸», тихие подорожания и три онлайн-кинотеатра, где вы смотрите один. Утечка читает банковскую выписку, находит каждую регулярную утечку и показывает, как её закрыть.</p>
+      <div class="ctas">
+        <a class="btn primary" href="#demo">Найти утечки за 10 секунд</a>
+        <a class="btn ghost" href="#money">Смотреть питч</a>
+      </div>
+      <p class="note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Выписка обрабатывается в браузере и никуда не отправляется</p>
+    </div>
+    <div aria-hidden="true">
+      <div class="receipt">
+        <div class="rh"><span>KASPI GOLD · ОКТЯБРЬ</span><span>*4417</span></div>
+        <div class="row"><span>MAGNUM</span><span>−8 420 ₸</span></div>
+        <div class="row hit"><span>YANDEX*PLUS</span><span>−2 290 ₸</span></div>
+        <div class="row"><span>YANDEX GO</span><span>−1 850 ₸</span></div>
+        <div class="row hit"><span>MEGOGO</span><span>−2 290 ₸</span></div>
+        <div class="row hit"><span>IVI</span><span>−2 490 ₸</span></div>
+        <div class="row"><span>KASPI МАГАЗИН</span><span>−12 400 ₸</span></div>
+        <div class="row hit"><span>NETFLIX.COM</span><span>−3 990 ₸</span></div>
+        <div class="row hit"><span>SPOTIFY</span><span>−1 290 ₸</span></div>
+        <div class="tot"><span>утекает в год</span><b id="heroLeak">≈ 120 720 ₸</b></div>
+        <div class="stamp">НАЙДЕНО 4</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="block band" id="demo">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Рабочий MVP</div>
+      <h2>Загрузите выписку или посмотрите на примере</h2>
+      <p>Подходит текст из PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.</p>
+    </div>
+
+    <div class="app" id="app">
+      <div class="app-bar">
+        <div style="display:flex;gap:14px;align-items:center;min-width:0">
+          <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="file" id="fileName">пример_выписка_айдар.csv</div>
+        </div>
+        <div class="app-tools">
+          <button class="btn ghost small" id="btnDemo" type="button">Пример</button>
+          <button class="btn ghost small" id="btnPaste" type="button">Вставить текст</button>
+          <label class="btn primary small" for="fileInput" style="cursor:pointer">Загрузить CSV</label>
+          <input type="file" id="fileInput" accept=".csv,.txt,text/csv" hidden>
+        </div>
+      </div>
+
+      <div class="drop" id="drop">
+        <p><b>Перетащите сюда CSV-выписку</b> или откройте PDF-выписку Kaspi, выделите весь текст (Ctrl+A), скопируйте и вставьте через «Вставить текст». Достаточно 3–6 месяцев.</p>
+        <span class="pill mute" id="parseInfo">—</span>
+      </div>
+      <div class="paste" id="pasteBox" hidden>
+        <textarea id="pasteArea" spellcheck="false" placeholder="Текст из PDF Kaspi:&#10;05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS&#10;&#10;или CSV:&#10;Дата;Описание;Сумма&#10;05.10.2026;YANDEX*PLUS;-2290,00"></textarea>
+        <div class="row"><button class="btn primary small" id="btnAnalyze" type="button">Найти утечки</button><button class="btn ghost small" id="btnShowDemoCsv" type="button">Показать формат примера</button></div>
+      </div>
+      <div class="err" id="err" hidden></div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="eyebrow">Регулярных платежей</div><div class="v" id="kCount">0</div><div class="s" id="kCountS">&nbsp;</div></div>
+        <div class="kpi"><div class="eyebrow">Подписки в месяц</div><div class="v" id="kMonth">0 ₸</div><div class="s">без обязательных</div></div>
+        <div class="kpi"><div class="eyebrow">Подписки в год</div><div class="v" id="kYear">0 ₸</div><div class="s" id="kYearS">&nbsp;</div></div>
+        <div class="kpi leak"><div class="eyebrow" style="color:var(--leak)">Утечка в год</div><div class="v" id="kLeak">0 ₸</div><div class="s" id="kLeakS">&nbsp;</div></div>
+      </div>
+
+      <div class="app-body">
+        <div class="list">
+          <div class="list-head">
+            <h3>Что нашли</h3>
+            <div class="seg" role="group" aria-label="Фильтр">
+              <button type="button" data-f="all" aria-pressed="true">Все</button>
+              <button type="button" data-f="leak" aria-pressed="false">Утечки</button>
+              <button type="button" data-f="ok" aria-pressed="false">Обязательные</button>
+            </div>
+          </div>
+          <div id="subs"></div>
+        </div>
+        <aside class="side">
+          <div class="chart">
+            <div class="eyebrow" style="margin-bottom:8px">Подписки по месяцам</div>
+            <div id="chart"></div>
+            <div class="legend"><span><i style="background:var(--accent)"></i>оставить</span><span><i style="background:var(--leak)"></i>утечка</span></div>
+          </div>
+          <div>
+            <div class="eyebrow" style="margin-bottom:10px">По категориям, в месяц</div>
+            <div class="cats" id="cats"></div>
+          </div>
+          <div class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Анализ идёт локально в вашем браузере. Мы не просим логин от банка и не храним выписки.</span></div>
+        </aside>
+      </div>
+
+      <div class="savebar">
+        <div>
+          <div class="big" id="saveBig">0 ₸ в год</div>
+          <div class="sm" id="saveSm">Отметьте подписки, которые хотите отменить</div>
+        </div>
+        <button class="btn small" id="btnPlan" type="button">Скопировать план отмены</button>
+      </div>
+    </div>
+
+    <div class="cab" id="cabinet" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="block" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Как это работает</div>
+      <h2>Три шага от выписки до сэкономленных денег</h2>
+    </div>
+    <div class="how">
+      <div><span class="n">01 / загрузка</span><h3>Выписка, а не доступ к банку</h3><p>Пользователь выгружает выписку из Kaspi, Halyk или другого банка и пересылает её в Telegram-бота. Никаких паролей и доступа к счёту: это снимает главный страх и юридические риски.</p></div>
+      <div><span class="n">02 / детектор</span><h3>Алгоритм регулярности</h3><p>Группируем платежи по нормализованному продавцу, ищем стабильный ритм (неделя, месяц, квартал, год) и стабильную сумму. Сверяем со справочником сервисов, ловим пробники, дубли и подорожания.</p></div>
+      <div><span class="n">03 / отмена</span><h3>План, письмо, напоминание</h3><p>Для каждой утечки готовые шаги отмены, шаблон претензии на возврат и напоминание за 2 дня до следующего списания. В Pro-версии отменяем за пользователя.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block band" id="money">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Питч</div>
+      <h2>Проблема, рынок и как на этом зарабатывать</h2>
+    </div>
+
+    <div class="grid3">
+      <div class="card"><div class="tag">Проблема</div><h3>Подписки размножаются незаметно</h3><p>Пробный период за 1 ₸ автоматически становится платным, цены растут без уведомлений, а кино и музыку человек оплачивает по два-три раза в разных сервисах. Сервисы в долларах дорожают вместе с курсом. Каждая сумма маленькая, поэтому её не замечают.</p></div>
+      <div class="card"><div class="tag">Решение</div><h3>Аудит выписки за 10 секунд</h3><p>Один экран: сколько уходит, что дублируется, что подорожало и что можно выключить прямо сейчас. Плюс сопровождение: напоминания, письма, автоотмена.</p></div>
+      <div class="card"><div class="tag">Почему сейчас</div><h3>Казахстан платит картой за всё</h3><p>Почти все платят через Kaspi и Halyk, а подписок становится больше каждый год: Яндекс, Megogo, ivi, Netflix, Spotify, ChatGPT. Банковские приложения не подсвечивают подписки: им выгодно, чтобы списания продолжались.</p></div>
+    </div>
+
+    <div style="margin-top:48px" class="grid2">
+      <div>
+        <h3 style="margin-bottom:14px">Размер рынка</h3>
+        <div class="funnel">
+          <div class="fstep"><div><div class="lab">TAM · все с мобильным банком в РК</div><div class="calc">12 млн × 11 880 ₸/год</div></div><div class="val">142,6 млрд ₸</div></div>
+          <div class="fstep"><div><div class="lab">SAM · 3+ платные подписки</div><div class="calc">3 млн × 11 880 ₸/год</div></div><div class="val">35,6 млрд ₸</div></div>
+          <div class="fstep"><div><div class="lab">SOM · 1% SAM за 3 года</div><div class="calc">30 тыс. платящих в Pro</div></div><div class="val">356 млн ₸</div></div>
+        </div>
+        <p class="disclaim">Оценка снизу вверх по допущениям: 12 млн активных пользователей мобильного банкинга в Казахстане, 3 млн из них с тремя и более подписками, Pro за 990 ₸/мес. Дальше Узбекистан и Кыргызстан. Цифры для проверки на первых интервью, а не факт.</p>
+      </div>
+      <div>
+        <h3 style="margin-bottom:14px">Монетизация</h3>
+        <div class="grid2" style="gap:12px">
+          <div class="card tier"><div class="tag">Free</div><div class="price">0 ₸</div><ul><li>Аудит выписки</li><li>Инструкции по отмене</li><li>Шаблоны писем</li></ul></div>
+          <div class="card tier hl"><div class="tag">Pro</div><div class="price">990 ₸<small>/мес</small></div><ul><li>Мониторинг новых списаний</li><li>Алерты о подорожании</li><li>Автоотмена агентом</li></ul></div>
+          <div class="card tier"><div class="tag">Возвраты</div><div class="price">20%<small> от суммы</small></div><ul><li>Претензии по пробникам и двойным списаниям</li><li>Платят только при успехе</li></ul></div>
+          <div class="card tier"><div class="tag">B2B</div><div class="price">white-label</div><ul><li>Модуль для банков и финтехов</li><li>Плата за MAU</li></ul></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px">
+      <h3 style="margin-bottom:14px">Юнит-экономика Pro: подвигайте допущения</h3>
+      <div class="calc-ui">
+        <div style="display:grid;gap:16px">
+          <div class="slider"><label for="sPrice">Цена Pro <span id="vPrice"></span></label><input type="range" id="sPrice" min="290" max="2990" step="100" value="990"></div>
+          <div class="slider"><label for="sConv">Конверсия Free → Pro <span id="vConv"></span></label><input type="range" id="sConv" min="1" max="20" step="0.5" value="6"></div>
+          <div class="slider"><label for="sChurn">Отток в месяц <span id="vChurn"></span></label><input type="range" id="sChurn" min="1" max="20" step="0.5" value="6"></div>
+          <div class="slider"><label for="sCac">Стоимость привлечения Free-юзера <span id="vCac"></span></label><input type="range" id="sCac" min="50" max="2000" step="50" value="250"></div>
+          <p class="disclaim" style="margin:0">Маржа после эквайринга и серверов принята за 85%. Reels, шортсы и Telegram дают дешёвый органический трафик, поэтому стартовое значение CAC низкое.</p>
+        </div>
+        <div class="out">
+          <div><div class="eyebrow">LTV платящего</div><div class="v" id="oLtv"></div></div>
+          <div><div class="eyebrow">CAC платящего</div><div class="v" id="oCac"></div></div>
+          <div><div class="eyebrow">LTV / CAC</div><div class="v" id="oRatio"></div></div>
+          <div><div class="eyebrow">Окупаемость</div><div class="v" id="oPay"></div></div>
+          <div class="wide"><div class="verdict" id="oVerdict"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:48px">
+      <h3 style="margin-bottom:14px">Конкуренты</h3>
+      <div class="scroll">
+        <table class="compare">
+          <thead><tr><th>Продукт</th><th>Рынок</th><th>Без доступа к банку</th><th>Пробники и дубли</th><th>Отмена за вас</th></tr></thead>
+          <tbody>
+            <tr class="us"><td>Утечка</td><td>Казахстан, Центральная Азия</td><td class="y">да</td><td class="y">да</td><td class="y">Pro</td></tr>
+            <tr><td>Rocket Money</td><td>США</td><td class="n">нет, Plaid</td><td class="y">частично</td><td class="y">да</td></tr>
+            <tr><td>Автоплатежи в Kaspi / Halyk</td><td>РК</td><td class="y">да</td><td class="n">нет</td><td class="n">только свои карты</td></tr>
+            <tr><td>Таблица в Excel</td><td>везде</td><td class="y">да</td><td class="n">вручную</td><td class="n">нет</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="disclaim">Главное преимущество: работаем поверх всех карт и банков сразу (у многих есть и Kaspi, и Halyk) и не ждём, пока банки откроют API.</p>
+    </div>
+
+    <div style="margin-top:48px" class="grid2">
+      <div class="card"><div class="tag">Привлечение</div><h3>Контент-машина</h3><ul><li>Reels и шортсы «разбираю выписку подписчика» на русском и казахском: реальные цифры, шок-итог в конце. Формат идеально ложится на faceless-каналы.</li><li>Telegram-бот: пересылаешь PDF из Kaspi и через минуту получаешь разбор.</li><li>Реферальная механика: «найди утечку другу» и месяц Pro бесплатно.</li></ul></div>
+      <div class="card"><div class="tag">Риски</div><h3>Что может пойти не так</h3><ul><li>Kaspi встроит такой же аудит. Ответ: мультибанковость и B2B white-label для остальных банков РК.</li><li>Люди боятся грузить выписки. Ответ: локальная обработка, открытый код детектора.</li><li>Автоотмена упирается в разные интерфейсы сервисов. Начинаем с топ-30 сервисов, остальным даём инструкции.</li><li>Это банковские данные. Ответ: у каждого свой аккаунт, вход по номеру телефона и SMS-коду, шифрование, храним только найденные подписки, а не выписки.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="road">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Роадмап</div>
+      <h2>От страницы до продукта за год</h2>
+    </div>
+    <div class="road">
+      <div class="now"><div class="q">Q4 2026 · сейчас</div><h3>MVP</h3><ul><li>Детектор по CSV и тексту выписки Kaspi</li><li>Справочник сервисов РК</li><li>Лендинг и сбор контактов</li></ul></div>
+      <div><div class="q">Q1 2027</div><h3>Telegram-бот</h3><ul><li>Чтение PDF Kaspi, Halyk, Freedom</li><li>Бот на казахском языке</li><li>Вход по номеру телефона и SMS</li><li>Напоминания и запуск Pro</li></ul></div>
+      <div><div class="q">Q2 2027</div><h3>Агент отмены</h3><ul><li>Автоотмена в топ-30 сервисов</li><li>Возвраты по претензиям</li><li>Узбекистан и Кыргызстан</li></ul></div>
+      <div><div class="q">Q3–Q4 2027</div><h3>B2B</h3><ul><li>SDK для банков</li><li>Пилот с одним банком РК</li><li>Раунд seed</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="block band" id="plan">
+  <div class="wrap grid2" style="align-items:start">
+    <div>
+      <div class="sec-head" style="margin-bottom:20px">
+        <div class="eyebrow">Для основателя</div>
+        <h2>План на первые 30 дней</h2>
+        <p>Конкретные действия, чтобы проверить идею до того, как тратить деньги. Галочки сохраняются в этом браузере.</p>
+      </div>
+      <div class="todo" id="todo"></div>
+    </div>
+    <div class="ask">
+      <div style="grid-column:1/-1">
+        <div class="eyebrow" style="color:inherit;opacity:.6">Запрос</div>
+        <h2 style="margin-top:8px">30 млн ₸ pre-seed на 9 месяцев</h2>
+        <p>Цель раунда: 20 тыс. пользователей бота, 1 000 платящих в Pro и подписанный пилот с банком. Это точка для seed-раунда. Параллельно подаёмся на гранты и акселерацию Astana Hub.</p>
+      </div>
+      <div class="use" style="grid-column:1/-1">
+        <div><span>Разработка</span><i style="width:100%"></i><b>45%</b></div>
+        <div><span>Контент и маркетинг</span><i style="width:66%"></i><b>30%</b></div>
+        <div><span>Юристы и инфраструктура</span><i style="width:33%"></i><b>15%</b></div>
+        <div><span>Резерв</span><i style="width:22%"></i><b>10%</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Утечка · концепт стартапа и рабочий прототип · Казахстан, октябрь 2026</span>
+    <span>Цифры рынка и экономики являются допущениями для проверки</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const tg=n=>Math.round(n).toLocaleString("ru-RU").replace(/,/g," ")+" ₸";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAY=864e5;
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- языки ---------- */
+const LANGS=["ru","kk","en"];
+let LANG=store.get("utechka-lang","ru");if(!LANGS.includes(LANG))LANG="ru";
+const LI=()=>LANGS.indexOf(LANG);
+const L=(ru,kk,en)=>[ru,kk,en][LI()];
+const LOC=()=>L("ru-RU","kk-KZ","en-GB");
+const DICT={
+"Утечка — наверх":["Утечка — жоғарыға","Utechka — back to top"],
+"Демо":["Демо","Demo"],
+"Как работает":["Қалай жұмыс істейді","How it works"],
+"Бизнес":["Бизнес","Business"],
+"Роадмап":["Жол картасы","Roadmap"],
+"План на 30 дней":["30 күндік жоспар","30-day plan"],
+"Проверить выписку":["Үзіндіні тексеру","Check a statement"],
+"Стартап из Казахстана · pre-seed · MVP работает прямо на этой странице":["Қазақстандық стартап · pre-seed · MVP осы бетте жұмыс істейді","Startup from Kazakhstan · pre-seed · the MVP runs right on this page"],
+"Ваши деньги утекают":["Ақшаңыз ағып кетіп жатыр","Your money leaks away"],
+"по 1 990 ₸":["1 990 ₸-ден","1,990 ₸ at a time"],
+"Забытые подписки, «пробный период за 1 ₸», тихие подорожания и три онлайн-кинотеатра, где вы смотрите один. Утечка читает банковскую выписку, находит каждую регулярную утечку и показывает, как её закрыть.":["Ұмытылған жазылымдар, «1 ₸-лік сынақ мерзімі», үнсіз қымбаттау және біреуін ғана көретін үш онлайн-кинотеатр. Утечка банк үзіндісін оқып, әрбір тұрақты шығынды тауып, оны қалай тоқтатуға болатынын көрсетеді.","Forgotten subscriptions, the “1 ₸ trial”, silent price hikes and three streaming services when you only watch one. Utechka (Russian for “leak”) reads your bank statement, finds every recurring leak and shows how to plug it."],
+"Найти утечки за 10 секунд":["Шығындарды 10 секундта табу","Find leaks in 10 seconds"],
+"Смотреть питч":["Питчті көру","See the pitch"],
+"Выписка обрабатывается в браузере и никуда не отправляется":["Үзінді браузерде өңделеді және ешқайда жіберілмейді","Your statement is processed in the browser and never sent anywhere"],
+"KASPI GOLD · ОКТЯБРЬ":["KASPI GOLD · ҚАЗАН","KASPI GOLD · OCTOBER"],
+"утекает в год":["жылына ағып кетеді","leaks per year"],
+"НАЙДЕНО 4":["4 ТАБЫЛДЫ","4 FOUND"],
+"Рабочий MVP":["Жұмыс істейтін MVP","Working MVP"],
+"Загрузите выписку или посмотрите на примере":["Үзіндіні жүктеңіз немесе үлгіні қараңыз","Upload a statement or try the sample"],
+"Подходит текст из PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.":["Kaspi мен Halyk PDF-үзінділерінің мәтіні, сондай-ақ Freedom, Jusan, Forte CSV файлдары және «күні», «сомасы», «сипаттамасы» бағандары бар кез келген кесте жарайды. Қазір Айдардың 7 айлық үлгі үзіндісі ашық, бұл сіздің деректеріңіз емес.","Works with text from Kaspi and Halyk PDF statements, CSV from Freedom, Jusan and Forte, and any table with date, amount and description columns. You are looking at Aidar's 7-month sample statement, not your data."],
+"Пример":["Үлгі","Sample"],
+"Вставить текст":["Мәтін қою","Paste text"],
+"Загрузить CSV":["CSV жүктеу","Upload CSV"],
+"Перетащите сюда CSV-выписку":["CSV-үзіндіні осында сүйреңіз","Drop a CSV statement here"],
+"или откройте PDF-выписку Kaspi, выделите весь текст (Ctrl+A), скопируйте и вставьте через «Вставить текст». Достаточно 3–6 месяцев.":["немесе Kaspi PDF-үзіндісін ашып, бүкіл мәтінді белгілеп (Ctrl+A), көшіріп, «Мәтін қою» арқылы қойыңыз. 3–6 ай жеткілікті.","or open a Kaspi PDF statement, select all text (Ctrl+A), copy it and use “Paste text”. 3–6 months is enough."],
+"Найти утечки":["Шығындарды табу","Find leaks"],
+"Показать формат примера":["Үлгі форматын көрсету","Show sample format"],
+"Регулярных платежей":["Тұрақты төлемдер","Recurring payments"],
+"Подписки в месяц":["Айлық жазылымдар","Subscriptions per month"],
+"без обязательных":["міндетті төлемдерсіз","excluding essentials"],
+"Подписки в год":["Жылдық жазылымдар","Subscriptions per year"],
+"Утечка в год":["Жылдық шығын","Leak per year"],
+"Что нашли":["Не таптық","What we found"],
+"Все":["Барлығы","All"],
+"Утечки":["Шығындар","Leaks"],
+"Обязательные":["Міндетті","Essentials"],
+"Подписки по месяцам":["Айлар бойынша жазылымдар","Subscriptions by month"],
+"оставить":["қалдыру","keep"],
+"утечка":["шығын","leak"],
+"По категориям, в месяц":["Санаттар бойынша, айына","By category, per month"],
+"Анализ идёт локально в вашем браузере. Мы не просим логин от банка и не храним выписки.":["Талдау тек сіздің браузеріңізде жүреді. Біз банк логинін сұрамаймыз және үзінділерді сақтамаймыз.","Analysis runs locally in your browser. We never ask for bank logins and never store statements."],
+"Скопировать план отмены":["Бас тарту жоспарын көшіру","Copy cancellation plan"],
+"Как это работает":["Бұл қалай жұмыс істейді","How it works"],
+"Три шага от выписки до сэкономленных денег":["Үзіндіден үнемделген ақшаға дейін үш қадам","Three steps from statement to money saved"],
+"01 / загрузка":["01 / жүктеу","01 / upload"],
+"Выписка, а не доступ к банку":["Банкке кіру емес, тек үзінді","A statement, not bank access"],
+"Пользователь выгружает выписку из Kaspi, Halyk или другого банка и пересылает её в Telegram-бота. Никаких паролей и доступа к счёту: это снимает главный страх и юридические риски.":["Пайдаланушы Kaspi, Halyk немесе басқа банктен үзінді алып, оны Telegram-ботқа жібереді. Ешқандай құпиясөз және шотқа кіру жоқ: бұл басты қорқынышты және заңдық тәуекелдерді жояды.","The user exports a statement from Kaspi, Halyk or another bank and forwards it to a Telegram bot. No passwords and no account access, which removes the main fear and the legal risk."],
+"02 / детектор":["02 / детектор","02 / detector"],
+"Алгоритм регулярности":["Тұрақтылық алгоритмі","Regularity algorithm"],
+"Группируем платежи по нормализованному продавцу, ищем стабильный ритм (неделя, месяц, квартал, год) и стабильную сумму. Сверяем со справочником сервисов, ловим пробники, дубли и подорожания.":["Төлемдерді сатушы бойынша топтап, тұрақты ырғақты (апта, ай, тоқсан, жыл) және тұрақты соманы іздейміз. Сервистер анықтамалығымен салыстырып, сынақ мерзімдерін, қайталануларды және қымбаттауды табамыз.","We group payments by normalized merchant and look for a steady rhythm (week, month, quarter, year) and a stable amount. Then we match a service catalog and catch trials, duplicates and price hikes."],
+"03 / отмена":["03 / бас тарту","03 / cancel"],
+"План, письмо, напоминание":["Жоспар, хат, еске салу","Plan, letter, reminder"],
+"Для каждой утечки готовые шаги отмены, шаблон претензии на возврат и напоминание за 2 дня до следующего списания. В Pro-версии отменяем за пользователя.":["Әр шығынға дайын бас тарту қадамдары, ақшаны қайтаруға арналған шағым үлгісі және келесі төлемге 2 күн қалғанда еске салу. Pro нұсқасында пайдаланушының орнына өзіміз бас тартамыз.","Every leak gets ready-made cancellation steps, a refund claim template and a reminder 2 days before the next charge. In Pro we cancel on the user's behalf."],
+"Питч":["Питч","Pitch"],
+"Проблема, рынок и как на этом зарабатывать":["Мәселе, нарық және бұдан қалай табыс табу","Problem, market and how we make money"],
+"Проблема":["Мәселе","Problem"],
+"Подписки размножаются незаметно":["Жазылымдар білінбей көбейеді","Subscriptions multiply unnoticed"],
+"Пробный период за 1 ₸ автоматически становится платным, цены растут без уведомлений, а кино и музыку человек оплачивает по два-три раза в разных сервисах. Сервисы в долларах дорожают вместе с курсом. Каждая сумма маленькая, поэтому её не замечают.":["1 ₸-лік сынақ мерзімі автоматты түрде ақылыға айналады, бағалар ескертусіз өседі, ал кино мен музыкаға адам әртүрлі сервистерде екі-үш рет төлейді. Долларлық сервистер бағаммен бірге қымбаттайды. Әр сома шағын, сондықтан оны ешкім байқамайды.","A 1 ₸ trial silently turns paid, prices rise without notice, and people pay for movies and music two or three times across services. Dollar-priced services get pricier with the exchange rate. Each amount is small, so nobody notices."],
+"Решение":["Шешім","Solution"],
+"Аудит выписки за 10 секунд":["Үзіндіні 10 секундта тексеру","A 10-second statement audit"],
+"Один экран: сколько уходит, что дублируется, что подорожало и что можно выключить прямо сейчас. Плюс сопровождение: напоминания, письма, автоотмена.":["Бір экран: қанша кетіп жатыр, не қайталанады, не қымбаттады және нені дәл қазір өшіруге болады. Оған қоса сүйемелдеу: еске салулар, хаттар, автоматты бас тарту.","One screen: how much goes out, what's duplicated, what got pricier and what you can turn off right now. Plus follow-up: reminders, letters, auto-cancellation."],
+"Почему сейчас":["Неге дәл қазір","Why now"],
+"Казахстан платит картой за всё":["Қазақстан бәріне картамен төлейді","Kazakhstan pays for everything by card"],
+"Почти все платят через Kaspi и Halyk, а подписок становится больше каждый год: Яндекс, Megogo, ivi, Netflix, Spotify, ChatGPT. Банковские приложения не подсвечивают подписки: им выгодно, чтобы списания продолжались.":["Барлығы дерлік Kaspi мен Halyk арқылы төлейді, ал жазылымдар жыл сайын көбейіп келеді: Яндекс, Megogo, ivi, Netflix, Spotify, ChatGPT. Банк қосымшалары жазылымдарды бөліп көрсетпейді: төлемдердің жалғасқаны оларға тиімді.","Almost everyone pays through Kaspi and Halyk, and subscriptions grow every year: Yandex, Megogo, ivi, Netflix, Spotify, ChatGPT. Bank apps don't highlight subscriptions, since they benefit when the charges continue."],
+"Размер рынка":["Нарық көлемі","Market size"],
+"TAM · все с мобильным банком в РК":["TAM · ҚР-дағы мобильді банк пайдаланушылары","TAM · everyone with mobile banking in Kazakhstan"],
+"12 млн × 11 880 ₸/год":["12 млн × 11 880 ₸/жыл","12M × 11,880 ₸/yr"],
+"142,6 млрд ₸":["142,6 млрд ₸","142.6B ₸"],
+"SAM · 3+ платные подписки":["SAM · 3+ ақылы жазылым","SAM · 3+ paid subscriptions"],
+"3 млн × 11 880 ₸/год":["3 млн × 11 880 ₸/жыл","3M × 11,880 ₸/yr"],
+"35,6 млрд ₸":["35,6 млрд ₸","35.6B ₸"],
+"SOM · 1% SAM за 3 года":["SOM · 3 жылда SAM-ның 1%","SOM · 1% of SAM in 3 years"],
+"30 тыс. платящих в Pro":["Pro-да 30 мың төлеуші","30K paying Pro users"],
+"356 млн ₸":["356 млн ₸","356M ₸"],
+"Оценка снизу вверх по допущениям: 12 млн активных пользователей мобильного банкинга в Казахстане, 3 млн из них с тремя и более подписками, Pro за 990 ₸/мес. Дальше Узбекистан и Кыргызстан. Цифры для проверки на первых интервью, а не факт.":["Болжамдарға негізделген төменнен жоғары бағалау: Қазақстанда мобильді банкингтің 12 млн белсенді пайдаланушысы, оның 3 млн-ында үш және одан көп жазылым бар, Pro айына 990 ₸. Әрі қарай Өзбекстан мен Қырғызстан. Бұл сандар алғашқы сұхбаттарда тексеруге арналған, факт емес.","Bottom-up estimate based on assumptions: 12M active mobile banking users in Kazakhstan, 3M of them with three or more subscriptions, Pro at 990 ₸/month. Uzbekistan and Kyrgyzstan come next. These numbers are to be tested in the first interviews, not facts."],
+"Монетизация":["Монетизация","Monetization"],
+"Аудит выписки":["Үзіндіні тексеру","Statement audit"],
+"Инструкции по отмене":["Бас тарту нұсқаулары","Cancellation guides"],
+"Шаблоны писем":["Хат үлгілері","Letter templates"],
+"/мес":["/ай","/mo"],
+"Мониторинг новых списаний":["Жаңа төлемдерді бақылау","New charge monitoring"],
+"Алерты о подорожании":["Қымбаттау туралы ескерту","Price hike alerts"],
+"Автоотмена агентом":["Агент арқылы автоматты бас тарту","Auto-cancel by an agent"],
+"Возвраты":["Қайтарулар","Refunds"],
+"от суммы":["сомадан","of the amount"],
+"Претензии по пробникам и двойным списаниям":["Сынақ мерзімі мен қос төлемдер бойынша шағымдар","Claims for trials and double charges"],
+"Платят только при успехе":["Тек нәтиже болғанда төлейді","Pay only on success"],
+"Модуль для банков и финтехов":["Банктер мен финтехтерге арналған модуль","Module for banks and fintechs"],
+"Плата за MAU":["MAU үшін төлем","Priced per MAU"],
+"Юнит-экономика Pro: подвигайте допущения":["Pro юнит-экономикасы: болжамдарды өзгертіп көріңіз","Pro unit economics: move the assumptions"],
+"Цена Pro":["Pro бағасы","Pro price"],
+"Конверсия Free → Pro":["Free → Pro конверсиясы","Free → Pro conversion"],
+"Отток в месяц":["Айлық кету","Monthly churn"],
+"Стоимость привлечения Free-юзера":["Free-пайдаланушыны тарту құны","Cost to acquire a free user"],
+"Маржа после эквайринга и серверов принята за 85%. Reels, шортсы и Telegram дают дешёвый органический трафик, поэтому стартовое значение CAC низкое.":["Эквайринг пен серверлерден кейінгі маржа 85% деп алынды. Reels, шортстар және Telegram арзан органикалық трафик береді, сондықтан CAC-тың бастапқы мәні төмен.","Margin after card fees and servers is assumed at 85%. Reels, Shorts and Telegram bring cheap organic traffic, so the starting CAC is low."],
+"LTV платящего":["Төлеушінің LTV","LTV per payer"],
+"CAC платящего":["Төлеушінің CAC","CAC per payer"],
+"Окупаемость":["Өтелу мерзімі","Payback"],
+"Конкуренты":["Бәсекелестер","Competitors"],
+"Продукт":["Өнім","Product"],
+"Рынок":["Нарық","Market"],
+"Без доступа к банку":["Банкке кірусіз","No bank access needed"],
+"Пробники и дубли":["Сынақтар мен қайталанулар","Trials and duplicates"],
+"Отмена за вас":["Сіз үшін бас тарту","Cancels for you"],
+"Утечка":["Утечка","Utechka"],
+"Казахстан, Центральная Азия":["Қазақстан, Орталық Азия","Kazakhstan, Central Asia"],
+"да":["иә","yes"],
+"США":["АҚШ","USA"],
+"нет, Plaid":["жоқ, Plaid","no, Plaid"],
+"частично":["ішінара","partly"],
+"Автоплатежи в Kaspi / Halyk":["Kaspi / Halyk автотөлемдері","Kaspi / Halyk autopayments"],
+"РК":["ҚР","KZ"],
+"нет":["жоқ","no"],
+"только свои карты":["тек өз карталары","own cards only"],
+"Таблица в Excel":["Excel кестесі","Excel spreadsheet"],
+"везде":["барлық жерде","everywhere"],
+"вручную":["қолмен","manual"],
+"Главное преимущество: работаем поверх всех карт и банков сразу (у многих есть и Kaspi, и Halyk) и не ждём, пока банки откроют API.":["Басты артықшылық: барлық карта мен банктің үстінен бірден жұмыс істейміз (көпшілікте Kaspi да, Halyk та бар) және банктердің API ашуын күтпейміз.","Our key advantage: we work across all cards and banks at once (many people have both Kaspi and Halyk) and don't wait for banks to open APIs."],
+"Привлечение":["Тарту","Acquisition"],
+"Контент-машина":["Контент-машина","Content machine"],
+"Reels и шортсы «разбираю выписку подписчика» на русском и казахском: реальные цифры, шок-итог в конце. Формат идеально ложится на faceless-каналы.":["Орыс және қазақ тілдеріндегі «жазылушының үзіндісін талдаймын» Reels пен шортстары: нақты сандар, соңында таңғаларлық қорытынды. Формат faceless-арналарға тамаша келеді.","Reels and Shorts “I review a follower's bank statement” in Russian and Kazakh: real numbers, a shocking total at the end. The format fits faceless channels perfectly."],
+"Telegram-бот: пересылаешь PDF из Kaspi и через минуту получаешь разбор.":["Telegram-бот: Kaspi-дің PDF-ін жібересің де, бір минутта талдау аласың.","Telegram bot: forward a Kaspi PDF and get a breakdown within a minute."],
+"Реферальная механика: «найди утечку другу» и месяц Pro бесплатно.":["Рефералдық механика: «досыңның шығынын тап» және бір ай Pro тегін.","Referrals: “find a leak for a friend” and get a month of Pro free."],
+"Риски":["Тәуекелдер","Risks"],
+"Что может пойти не так":["Не дұрыс болмауы мүмкін","What could go wrong"],
+"Kaspi встроит такой же аудит. Ответ: мультибанковость и B2B white-label для остальных банков РК.":["Kaspi дәл осындай тексеруді енгізуі мүмкін. Жауап: көп банкпен жұмыс және ҚР-дың басқа банктері үшін B2B white-label.","Kaspi builds the same audit. Answer: multi-bank coverage and B2B white-label for the other banks in Kazakhstan."],
+"Люди боятся грузить выписки. Ответ: локальная обработка, открытый код детектора.":["Адамдар үзінді жүктеуден қорқады. Жауап: жергілікті өңдеу, детектордың ашық коды.","People are afraid to upload statements. Answer: local processing and an open-source detector."],
+"Автоотмена упирается в разные интерфейсы сервисов. Начинаем с топ-30 сервисов, остальным даём инструкции.":["Автоматты бас тарту сервистердің әртүрлі интерфейстеріне тіреледі. Топ-30 сервистен бастаймыз, қалғандарына нұсқаулық береміз.","Auto-cancel runs into different service interfaces. We start with the top 30 services and give instructions for the rest."],
+"От страницы до продукта за год":["Беттен өнімге дейін бір жылда","From page to product in a year"],
+"Q4 2026 · сейчас":["Q4 2026 · қазір","Q4 2026 · now"],
+"Детектор по CSV и тексту выписки Kaspi":["CSV және Kaspi үзінді мәтіні бойынша детектор","Detector for CSV and Kaspi statement text"],
+"Справочник сервисов РК":["ҚР сервистерінің анықтамалығы","Catalog of Kazakhstan services"],
+"Лендинг и сбор контактов":["Лендинг және контактілер жинау","Landing page and lead capture"],
+"Telegram-бот":["Telegram-бот","Telegram bot"],
+"Чтение PDF Kaspi, Halyk, Freedom":["Kaspi, Halyk, Freedom PDF-ін оқу","Reading Kaspi, Halyk, Freedom PDFs"],
+"Бот на казахском языке":["Қазақ тіліндегі бот","Bot in Kazakh"],
+"Вход по номеру телефона и SMS":["Телефон нөмірі және SMS арқылы кіру","Sign-in with phone number and SMS"],
+"Это банковские данные. Ответ: у каждого свой аккаунт, вход по номеру телефона и SMS-коду, шифрование, храним только найденные подписки, а не выписки.":["Бұл банк деректері. Жауап: әркімнің өз аккаунты, телефон нөмірі мен SMS-код арқылы кіру, шифрлау, үзінділерді емес, тек табылған жазылымдарды сақтаймыз.","This is banking data. Answer: everyone gets their own account, sign-in by phone number and SMS code, encryption, and we store only the subscriptions found, never the statements."],
+"Напоминания и запуск Pro":["Еске салулар және Pro іске қосу","Reminders and Pro launch"],
+"Агент отмены":["Бас тарту агенті","Cancellation agent"],
+"Автоотмена в топ-30 сервисов":["Топ-30 сервисте автоматты бас тарту","Auto-cancel in top 30 services"],
+"Возвраты по претензиям":["Шағымдар бойынша қайтарулар","Refunds via claims"],
+"Узбекистан и Кыргызстан":["Өзбекстан және Қырғызстан","Uzbekistan and Kyrgyzstan"],
+"SDK для банков":["Банктерге арналған SDK","SDK for banks"],
+"Пилот с одним банком РК":["ҚР-дың бір банкімен пилот","Pilot with one Kazakh bank"],
+"Раунд seed":["Seed раунды","Seed round"],
+"Для основателя":["Негізін қалаушыға","For the founder"],
+"План на первые 30 дней":["Алғашқы 30 күнге жоспар","Plan for the first 30 days"],
+"Конкретные действия, чтобы проверить идею до того, как тратить деньги. Галочки сохраняются в этом браузере.":["Ақша жұмсамас бұрын идеяны тексеруге арналған нақты әрекеттер. Белгілер осы браузерде сақталады.","Concrete steps to test the idea before spending money. Checkmarks are saved in this browser."],
+"Запрос":["Сұраныс","The ask"],
+"30 млн ₸ pre-seed на 9 месяцев":["9 айға 30 млн ₸ pre-seed","30M ₸ pre-seed for 9 months"],
+"Цель раунда: 20 тыс. пользователей бота, 1 000 платящих в Pro и подписанный пилот с банком. Это точка для seed-раунда. Параллельно подаёмся на гранты и акселерацию Astana Hub.":["Раунд мақсаты: боттың 20 мың пайдаланушысы, Pro-да 1 000 төлеуші және банкпен қол қойылған пилот. Бұл seed-раундқа шығу нүктесі. Қатар Astana Hub гранттары мен акселерациясына өтінім береміз.","Round goals: 20K bot users, 1,000 paying Pro users and a signed pilot with a bank. That's the point for a seed round. In parallel we apply for Astana Hub grants and acceleration."],
+"Разработка":["Әзірлеу","Development"],
+"Контент и маркетинг":["Контент және маркетинг","Content and marketing"],
+"Юристы и инфраструктура":["Заңгерлер және инфрақұрылым","Legal and infrastructure"],
+"Резерв":["Резерв","Reserve"],
+"Утечка · концепт стартапа и рабочий прототип · Казахстан, октябрь 2026":["Утечка · стартап концепциясы және жұмыс істейтін прототип · Қазақстан, қазан 2026","Utechka · startup concept and working prototype · Kazakhstan, October 2026"],
+"Цифры рынка и экономики являются допущениями для проверки":["Нарық пен экономика сандары тексеруге арналған болжамдар","Market and economics figures are assumptions to be tested"]
+};
+const CATS_L={
+ video:["Кино и сериалы","Кино және сериалдар","Movies & TV"],music:["Музыка","Музыка","Music"],ai:["Нейросети","Нейрожелілер","AI"],
+ cloud:["Облако","Бұлт","Cloud"],msg:["Мессенджеры","Мессенджерлер","Messengers"],books:["Книги","Кітаптар","Books"],fit:["Спорт","Спорт","Fitness"],
+ soft:["Софт","Бағдарламалар","Software"],games:["Игры","Ойындар","Games"],tel:["Связь","Байланыс","Telecom"],home:["ЖКХ","Коммуналдық","Utilities"],other:["Другое","Басқа","Other"]};
+const catName=c=>CATS_L[c][LI()];
+const NAMES={"Яндекс Плюс":[0,"Yandex Plus"],"Кинопоиск":[0,"Kinopoisk"],"ТВ от оператора":["Оператордың ТВ-сы","Carrier TV"],"Иви":[0,"ivi"],"Амедиатека":[0,"Amediateka"],
+ "Яндекс Музыка":[0,"Yandex Music"],"VK Музыка":[0,"VK Music"],"Звук":[0,"Zvuk"],"Яндекс 360":[0,"Yandex 360"],"Литрес":[0,"Litres"],"Яндекс Книги":[0,"Yandex Books"],
+ "Фитнес-клуб":["Фитнес-клуб","Fitness club"],"Игровая подписка":["Ойын жазылымы","Gaming subscription"],"Мобильная связь":["Ұялы байланыс","Mobile plan"],
+ "Коммунальные платежи":["Коммуналдық төлемдер","Utilities"],"Домашний интернет":["Үй интернеті","Home internet"]};
+const nm=n=>{const v=NAMES[n];if(!v||LANG==="ru")return n;const t=v[LI()-1];return t||n};
+const STEPS={"Профиль":["Профиль","Profile"],"Подписки":["Жазылымдар","Subscriptions"],"Подписка":["Жазылым","Subscription"],"Отключить автопродление":["Автожаңартуды өшіріңіз","Turn off auto-renewal"],
+ "Настройки":["Баптаулар","Settings"],"Отменить":["Бас тартыңыз","Cancel"],"Отключить":["Өшіріңіз","Turn off"],"Отменить подписку":["Жазылымнан бас тартыңыз","Cancel subscription"],
+ "Управление подпиской":["Жазылымды басқару","Manage subscription"],"Управление подписками":["Жазылымдарды басқару","Manage subscriptions"],"Аккаунт":["Аккаунт","Account"],"Плюс":["Плюс","Plus"],
+ "Приложение Яндекс":["Яндекс қосымшасы","Yandex app"],"Тарифы":["Тарифтер","Plans"],"Услуги":["Қызметтер","Services"],"Личный кабинет оператора":["Оператордың жеке кабинеті","Carrier account page"],
+ "Сервисы":["Сервистер","Services"],"VK Музыка":["VK Музыка","VK Music"],"Настройки iPhone":["iPhone баптаулары","iPhone Settings"],"Ваше имя":["Сіздің атыңыз","Your name"],
+ "Настройки консоли":["Консоль баптаулары","Console settings"],"Управление (через App Store / Google Play)":["Басқару (App Store / Google Play арқылы)","Manage (via App Store / Google Play)"],
+ "Обратиться на ресепшен или в приложение клуба, взять подтверждение о расторжении":["Ресепшенге немесе клуб қосымшасына жүгініп, шарттың бұзылғаны туралы растама алыңыз","Contact the front desk or the club app and get written confirmation of termination"],
+ "Cancel (проверьте штраф за досрочную отмену)":["Cancel (мерзімінен бұрын бас тарту айыппұлын тексеріңіз)","Cancel (check the early termination fee)"]};
+const step=x=>{const v=STEPS[x];return v&&LANG!=="ru"?v[LI()-1]:x};
+const PER={"неделя":["раз в неделю","аптасына бір рет","weekly","каждую неделю","апта сайын","every week","нед","апта","wk"],
+ "месяц":["раз в месяц","айына бір рет","monthly","каждый месяц","ай сайын","every month","мес","ай","mo"],
+ "квартал":["раз в квартал","тоқсанына бір рет","quarterly","каждый квартал","тоқсан сайын","every quarter","кв","тоқсан","qtr"],
+ "год":["раз в год","жылына бір рет","yearly","каждый год","жыл сайын","every year","год","жыл","yr"]};
+const per=(p,kind)=>PER[p][kind*3+LI()];
+function plural(n,a,b,c){n=Math.abs(n)%100;const m=n%10;if(n>10&&n<20)return c;if(m>1&&m<5)return b;if(m===1)return a;return c}
+const cnt=(n,ru3,kk,en1)=>n+" "+L(plural(n,...ru3),kk,en1+(n===1?"":"s"));
+const DEMO_NAME=()=>L("пример_выписка_айдар.csv","үлгі_үзінді_айдар.csv","sample_statement_aidar.csv");
+
+let textNodes=null;
+function collect(){
+  textNodes=[];
+  (function walk(n){for(const c of n.childNodes){
+    if(c.nodeType===3){const k=c.nodeValue.replace(/\s+/g," ").trim();if(k&&DICT[k])textNodes.push([c,k,c.nodeValue])}
+    else if(c.nodeType===1&&c.tagName!=="SCRIPT"&&c.tagName!=="STYLE")walk(c);
+  }})(document.body);
+}
+function applyLang(){
+  if(!textNodes)collect();
+  document.documentElement.lang=L("ru","kk","en");
+  for(const [node,k,orig] of textNodes){
+    if(LANG==="ru"){node.nodeValue=orig;continue}
+    const lead=orig.match(/^\s*/)[0],trail=orig.match(/\s*$/)[0];
+    node.nodeValue=lead+DICT[k][LI()-1]+trail;
+  }
+  $(".logo").setAttribute("aria-label",L("Утечка — наверх","Утечка — жоғарыға","Utechka — back to top"));
+  $(".list-head .seg").setAttribute("aria-label",L("Фильтр","Сүзгі","Filter"));
+  $("#langSeg").setAttribute("aria-label",L("Язык","Тіл","Language"));
+  $("#pasteArea").placeholder=L("Текст из PDF Kaspi:\n05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS\n\nили CSV:\nДата;Описание;Сумма\n05.10.2026;YANDEX*PLUS;-2290,00",
+    "Kaspi PDF мәтіні:\n05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS\n\nнемесе CSV:\nДата;Описание;Сумма\n05.10.2026;YANDEX*PLUS;-2290,00",
+    "Text from a Kaspi PDF:\n05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS\n\nor CSV:\nDate;Description;Amount\n05.10.2026;YANDEX*PLUS;-2290,00");
+  document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===LANG));
+}
+
+
+/* ---------- справочник сервисов ---------- */
+const CATS={video:"Кино и сериалы",music:"Музыка",ai:"Нейросети",cloud:"Облако",msg:"Мессенджеры",books:"Книги",fit:"Спорт",soft:"Софт",games:"Игры",tel:"Связь",home:"ЖКХ",other:"Другое"};
+const CAT_COLOR={video:"#C2410C",music:"#7C3AED",ai:"#0F766E",cloud:"#2563EB",msg:"#0284C7",books:"#A16207",fit:"#BE123C",soft:"#4338CA",games:"#15803D",tel:"#475569",home:"#475569",other:"#64748B"};
+const CATALOG=[
+ [/yandex.?plus|яндекс.?плюс/,"Яндекс Плюс",["video","music"],"Приложение Яндекс → Профиль → Плюс → Управление подпиской → Отменить"],
+ [/kinopoisk|кинопоиск/,"Кинопоиск",["video"],"kinopoisk.ru → Профиль → Подписки → Отключить автопродление"],
+ [/megogo|мегого/,"Megogo",["video"],"megogo.net → Профиль → Подписки → Отключить автопродление"],
+ [/beeline.?tv|kcell.?tv|tvplus|tv\+/,"ТВ от оператора",["video"],"Личный кабинет оператора → Услуги → Отключить"],
+ [/okko/,"Okko",["video"],"okko.tv → Настройки → Подписки → Отключить"],
+ [/\bivi\b|иви/,"Иви",["video"],"ivi.ru → Профиль → Подписки → Отключить автопродление"],
+ [/start\.?ru|start online|^start\b/,"START",["video"],"start.ru → Аккаунт → Подписка → Отменить"],
+ [/wink/,"Wink",["video"],"wink.ru → Настройки → Управление подписками"],
+ [/amediateka|амедиатека/,"Амедиатека",["video"],"amediateka.ru → Профиль → Подписка"],
+ [/premier|премьер/,"PREMIER",["video"],"premier.one → Профиль → Подписки"],
+ [/netflix/,"Netflix",["video"],"Account → Cancel membership"],
+ [/youtube/,"YouTube Premium",["video","music"],"youtube.com/paid_memberships → Отменить"],
+ [/yandex.?music|яндекс.?музык/,"Яндекс Музыка",["music"],"music.yandex.kz → Настройки → Подписка → Отменить"],
+ [/apple.?music/,"Apple Music",["music"],"Настройки iPhone → Ваше имя → Подписки → Apple Music"],
+ [/vk.?(music|музык)|вк.?музык|boom/,"VK Музыка",["music"],"VK → Сервисы → Подписки → VK Музыка → Отключить"],
+ [/spotify/,"Spotify",["music"],"Account → Manage plan → Cancel"],
+ [/zvuk|звук/,"Звук",["music"],"zvuk.com → Профиль → Подписка"],
+ [/openai|chatgpt/,"ChatGPT Plus",["ai"],"chatgpt.com → Settings → Subscription → Cancel"],
+ [/anthropic|claude/,"Claude",["ai"],"claude.ai → Settings → Billing → Cancel"],
+ [/midjourney/,"Midjourney",["ai"],"midjourney.com/account → Cancel plan"],
+ [/telegram/,"Telegram Premium",["msg"],"Telegram → Настройки → Premium → Управление (через App Store / Google Play)"],
+ [/google.?(one|storage)/,"Google One",["cloud"],"one.google.com → Настройки → Отменить подписку"],
+ [/icloud|apple\.com|itunes/,"Apple",["cloud"],"Настройки iPhone → Ваше имя → Подписки"],
+ [/yandex.?(disk|360)|яндекс.?(диск|360)/,"Яндекс 360",["cloud"],"360.yandex.ru → Тарифы → Отключить"],
+ [/litres|литрес/,"Литрес",["books"],"litres.ru → Профиль → Подписка → Отменить"],
+ [/bookmate|букмейт|storytel|яндекс.?книг|yandex.?books/,"Яндекс Книги",["books"],"Профиль → Подписки → Отменить"],
+ [/invictus|fitness|фитнес|world.?class|gym|спортзал|1fit/,"Фитнес-клуб",["fit"],"Обратиться на ресепшен или в приложение клуба, взять подтверждение о расторжении"],
+ [/adobe/,"Adobe",["soft"],"account.adobe.com → Plans → Cancel (проверьте штраф за досрочную отмену)"],
+ [/microsoft|office ?365/,"Microsoft 365",["soft"],"account.microsoft.com → Services → Cancel"],
+ [/notion/,"Notion",["soft"],"Settings → Plans → Downgrade"],
+ [/discord|nitro/,"Discord Nitro",["games"],"Настройки → Подписки → Отменить"],
+ [/playstation|psn|xbox|game.?pass/,"Игровая подписка",["games"],"Настройки консоли → Подписки"],
+ [/beeline|билайн|kcell|activ|tele2|теле2|altel|алтел|\bizi\b/,"Мобильная связь",["tel"],null,true],
+ [/alseco|алсеко|ерц|ивц|жкх|жку|коммунал|энергосбыт|водоканал|алматы су|астана су/,"Коммунальные платежи",["home"],null,true],
+ [/kazakhtelecom|казахтелеком|интернет|beeline.?home|transtelecom|транстелеком/,"Домашний интернет",["tel"],null,true]
+];
+function lookup(key){for(const c of CATALOG){if(c[0].test(key))return{name:c[1],cats:c[2],cancel:c[3],essential:!!c[4]}}return null}
+
+/* ---------- парсинг CSV ---------- */
+function splitCSV(text){
+  const first=text.split(/\r?\n/).find(l=>l.trim())||"";
+  const cnt=ch=>first.split(ch).length-1;
+  const d=[";","\t",","].sort((a,b)=>cnt(b)-cnt(a))[0];
+  const rows=[];let row=[],cur="",q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++}else q=false}else cur+=c}
+    else if(c==='"')q=true;
+    else if(c===d){row.push(cur);cur=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(cur);cur="";if(row.some(x=>x.trim()))rows.push(row);row=[]}
+    else cur+=c;
+  }
+  row.push(cur);if(row.some(x=>x.trim()))rows.push(row);
+  return rows;
+}
+function parseDate(s){
+  s=String(s).trim();let m;
+  if((m=s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/))){let y=+m[3];if(y<100)y+=2000;return new Date(y,m[2]-1,+m[1])}
+  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return new Date(+m[1],m[2]-1,+m[3]);
+  return null;
+}
+function parseAmount(s){
+  s=String(s).replace(/[\s ₸₽]|KZT|RUB|тг\.?|тенге|руб\.?/gi,"").replace(/[−–]/g,"-");
+  if(!/\d/.test(s))return NaN;
+  if(/,\d{1,2}$/.test(s))s=s.replace(/\./g,"").replace(",",".");else s=s.replace(/,/g,"");
+  return parseFloat(s);
+}
+/* текст из PDF-выписки (Kaspi, Halyk): «05.10.26  - 2 290,00 ₸  Покупки  YANDEX*PLUS» */
+function parseLines(text){
+  const re=/(\d{2}\.\d{2}\.\d{2,4})\s+([+\-−–]?\s?\d[\d  ]*[.,]\d{2})\s*(?:₸|KZT|тг)?\s+(.+)/i;
+  const tx=[];
+  for(const line of text.split(/\r?\n/)){
+    const m=line.match(re);if(!m)continue;
+    const d=parseDate(m[1]),a=parseAmount(m[2]);
+    const t=m[3].replace(/^(Покупки|Покупка|Переводы|Перевод|Пополнение|Снятия|Снятие|Платежи|Платеж|Платёж|Разное)\s+/i,"").trim();
+    if(d&&isFinite(a)&&a!==0&&t)tx.push({d,a,t,op:m[3]});
+  }
+  if(tx.length<3)return null;
+  const hasSign=tx.some(x=>x.a<0);
+  const out=tx.filter(x=>hasSign?x.a<0:!/^(Пополнение|Зарплата)/i.test(x.op)).map(x=>({d:x.d,a:Math.abs(x.a),t:x.t}));
+  return {tx:out,total:tx.length};
+}
+function parseStatement(text){
+  const lines=parseLines(text);
+  if(lines&&!/[;\t]/.test(text.slice(0,300)))return lines;
+  try{return parseCSV(text)}catch(e){if(lines)return lines;throw e}
+}
+function parseCSV(text){
+  const rows=splitCSV(text.replace(/^﻿/,""));
+  if(rows.length<2)throw new Error(L("В файле меньше двух строк. Нужна выписка хотя бы за 2–3 месяца.","Файлда екі жолдан аз. Кемінде 2–3 айлық үзінді керек.","The file has fewer than two rows. You need a statement covering at least 2–3 months."));
+  let hi=rows.findIndex(r=>r.some(c=>/дата|date/i.test(c)));
+  let iDate=-1,iAmt=-1,iDesc=-1;
+  if(hi>=0){
+    const h=rows[hi].map(c=>c.toLowerCase().trim());
+    iDate=h.findIndex(c=>/дата операц|^дата|date/.test(c));
+    iAmt=h.findIndex(c=>/сумма операц/.test(c));if(iAmt<0)iAmt=h.findIndex(c=>/сумма|amount|списан/.test(c));
+    iDesc=h.findIndex(c=>/описание|description|назначение|контрагент|merchant|получатель/.test(c));
+  }
+  const body=rows.slice(hi+1);
+  const sample=body.slice(0,30);const ncol=Math.max(...sample.map(r=>r.length));
+  const score=(f)=>{const s=[];for(let c=0;c<ncol;c++)s.push(sample.filter(r=>f(r[c]||"")).length);return s};
+  if(iDate<0){const s=score(v=>!!parseDate(v));iDate=s.indexOf(Math.max(...s))}
+  if(iAmt<0){const s=score(v=>/^[\s\-+−]?[\d\s ]+([.,]\d{1,2})?\s*(₸|тг|KZT|₽)?$/i.test(v.trim())&&!parseDate(v));iAmt=s.indexOf(Math.max(...s))}
+  if(iDesc<0){let best=-1,bl=-1;for(let c=0;c<ncol;c++){if(c===iDate||c===iAmt)continue;const l=sample.reduce((a,r)=>a+((r[c]||"").replace(/[\d\s.,-]/g,"").length),0);if(l>bl){bl=l;best=c}}iDesc=best}
+  const tx=[];
+  for(const r of body){const d=parseDate(r[iDate]||""),a=parseAmount(r[iAmt]||""),t=(r[iDesc]||"").trim();if(d&&isFinite(a)&&a!==0&&t)tx.push({d,a,t})}
+  if(tx.length<3)throw new Error(L("Не удалось распознать колонки даты, суммы и описания. Проверьте, что это CSV-выписка с заголовком.","Күн, сома және сипаттама бағандары танылмады. Бұл тақырыбы бар CSV-үзінді екенін тексеріңіз.","Couldn't find the date, amount and description columns. Check that this is a CSV statement with a header row."));
+  const hasNeg=tx.some(x=>x.a<0);
+  const out=tx.filter(x=>hasNeg?x.a<0:true).map(x=>({d:x.d,a:Math.abs(x.a),t:x.t}));
+  return {tx:out,total:tx.length};
+}
+
+/* ---------- детектор регулярных платежей ---------- */
+function keyOf(t){
+  let k=t.toLowerCase().replace(/ё/g,"е")
+   .replace(/(^|\s)(оплата|покупка|покупки|списание|платеж|платёж|payment|pos|retail|card|kaz|kz|almaty|алматы|astana|астана|shymkent|шымкент|g\.|г\.)(?=\s|$)/g," ")
+   .replace(/[0-9*#№_]+/g," ").replace(/[^a-zа-я.\s]/g," ").replace(/\s+/g," ").trim();
+  return k.split(" ").slice(0,3).join(" ");
+}
+const median=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+const PERIODS=[{n:"неделя",lo:6,hi:8,days:7,mult:52/12,tol:2},{n:"месяц",lo:25,hi:36,days:30.4,mult:1,tol:5},{n:"квартал",lo:84,hi:97,days:91,mult:1/3,tol:8},{n:"год",lo:350,hi:380,days:365,mult:1/12,tol:15}];
+
+function detect(tx){
+  const end=new Date(Math.max(...tx.map(x=>+x.d))),start=new Date(Math.min(...tx.map(x=>+x.d)));
+  const groups=new Map();
+  for(const x of tx){const k=keyOf(x.t);if(!k)continue;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)}
+  const subs=[];
+  for(const [k,arr] of groups){
+    if(arr.length<2)continue;
+    arr.sort((a,b)=>a.d-b.d);
+    let list=arr,trial=null;
+    const med0=median(arr.map(x=>x.a));
+    if(arr.length>=3&&arr[0].a<=med0*0.1){trial=arr[0]}
+    const iv=[];for(let i=1;i<list.length;i++)iv.push((list[i].d-list[i-1].d)/DAY);
+    const mi=median(iv);
+    const p=PERIODS.find(p=>mi>=p.lo&&mi<=p.hi);if(!p)continue;
+    const regular=iv.filter(v=>Math.abs(v-p.days)<=p.tol+ (p.n==="месяц"?2:0)).length/iv.length;
+    if(regular<0.7)continue;
+    const paid=trial?list.slice(1):list;
+    const amts=paid.map(x=>x.a),mean=amts.reduce((a,b)=>a+b,0)/amts.length;
+    const cv=Math.sqrt(amts.reduce((a,b)=>a+(b-mean)**2,0)/amts.length)/mean;
+    if(cv>0.35)continue;
+    const cat=lookup(k);
+    const last=paid[paid.length-1].a,first=paid[0].a;
+    const monthly=last*p.mult;
+    const since=(end-paid[paid.length-1].d)/DAY;
+    const active=since<=p.days+7;
+    const next=new Date(+paid[paid.length-1].d+p.days*DAY);
+    subs.push({key:k,raw:arr[arr.length-1].t,name:cat?cat.name:k.replace(/(^|\s)\S/g,s=>s.toUpperCase()),
+      cats:cat?cat.cats:["other"],cancel:cat?cat.cancel:null,essential:cat?cat.essential:false,known:!!cat,
+      period:p.n,count:paid.length,last,first,monthly,yearly:monthly*12,active,next,trial,
+      history:list.map(x=>x.a),dates:list.map(x=>x.d),variable:cv>0.08,flags:[]});
+  }
+  // флаги
+  for(const s of subs){
+    if(s.essential)continue;
+    if(s.trial)s.flags.push({t:"leak",k:"trial"});
+    if(!s.variable&&s.last>s.first*1.03)s.flags.push({t:"warn",k:"up",n:Math.round((s.last/s.first-1)*100)});
+    if(!s.known)s.flags.push({t:"mute",k:"unk"});
+    if(!s.active)s.flags.push({t:"mute",k:"off"});
+  }
+  // дубли по категориям: оставляем самый выгодный по цене за категорию
+  const live=subs.filter(s=>s.active&&!s.essential);
+  for(const c of Object.keys(CATS)){
+    const g=live.filter(s=>s.cats.includes(c));
+    if(g.length<2)continue;
+    const keep=g.slice().sort((a,b)=>a.monthly/a.cats.length-b.monthly/b.cats.length)[0];
+    for(const s of g){
+      if(s===keep){if(!s.keepNote)s.keepNote=[];s.keepNote.push(c);continue}
+      if(!s.flags.some(f=>f.k==="dup"))s.flags.push({t:"leak",k:"dup",cat:c,with:keep.name});
+    }
+  }
+  for(const s of subs){s.leak=s.active&&!s.essential&&s.flags.some(f=>f.k==="dup"||f.k==="trial")}
+  subs.sort((a,b)=>(b.leak-a.leak)||(a.essential-b.essential)||(b.yearly-a.yearly));
+  return {subs,start,end};
+}
+
+/* ---------- демо-выписка ---------- */
+function demoCSV(){
+  let seed=7;const rnd=()=>((seed=(seed*16807)%2147483647)-1)/2147483646;
+  const rows=[];const add=(y,m,d,desc,amt)=>{const dt=new Date(y,m,d);if(dt>new Date(2026,9,25)||dt<new Date(2026,3,1))return;rows.push([dt,desc,amt])};
+  for(let m=3;m<=9;m++){
+    add(2026,m,5,"YANDEX*PLUS ALMATY",m>=7?2290:1990);
+    add(2026,m,12,"MEGOGO.NET",2290);
+    add(2026,m,18,"SPOTIFY P2F4A",1290);
+    add(2026,m,3,"OPENAI *CHATGPT SUBSCR",10200+(m-3)*115);
+    add(2026,m,22,"TELEGRAM PREMIUM",1990);
+    add(2026,m,9,"GOOGLE *GOOGLE ONE",990);
+    add(2026,m,27,"YANDEX BOOKS",1490);
+    add(2026,m,1,"INVICTUS FITNESS ABONEMENT",22000);
+    add(2026,m,15,"NETFLIX.COM",3990);
+    add(2026,m,14,"BEELINE KZ",4990);
+    add(2026,m,10,"ALSECO коммунальные услуги",Math.round(19000+rnd()*9000));
+    if(m>=6)add(2026,m,20,"IVI",2490);
+  }
+  add(2026,5,20,"IVI",1);
+  add(2026,4,7,"ADOBE *CREATIVE CLOUD",5990);add(2026,5,7,"ADOBE *CREATIVE CLOUD",5990);add(2026,6,7,"ADOBE *CREATIVE CLOUD",5990);
+  const noise=[["MAGNUM",2000,18000,2.5],["YANDEX GO",900,4500,4],["WILDBERRIES",3000,25000,6],["COFFEE BOOM",1200,2800,3.5],["SMALL",1500,9000,5],["EUROPHARMA",1000,8000,12],["KASPI МАГАЗИН",3000,40000,9]];
+  for(const [n,lo,hi,every] of noise){let d=new Date(2026,3,1+Math.floor(rnd()*3));while(d<=new Date(2026,9,25)){add(d.getFullYear(),d.getMonth(),d.getDate(),n+" "+(1000+Math.floor(rnd()*8999)),Math.round(lo+rnd()*(hi-lo)));d=new Date(+d+(every*0.4+rnd()*every*1.2)*DAY)}}
+  rows.sort((a,b)=>b[0]-a[0]);
+  const f=d=>String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();
+  return "Дата операции;Описание;Сумма операции;Валюта\n"+rows.map(r=>f(r[0])+";"+r[1]+";-"+r[2].toFixed(2).replace(".",",")+";KZT").join("\n")+"\n05.10.2026;Зарплата ТОО Ромашка;450 000,00;KZT";
+}
+
+/* ---------- рендер ---------- */
+let state={subs:[],start:null,end:null,sel:new Set(),open:new Set(),filter:"all",file:null};
+const KK_M=["қаңтар","ақпан","наурыз","сәуір","мамыр","маусым","шілде","тамыз","қыркүйек","қазан","қараша","желтоқсан"];
+const fmtD=d=>LANG==="kk"?d.getDate()+" "+KK_M[d.getMonth()]:d.toLocaleDateString(LOC(),{day:"numeric",month:"long"});
+const fmtM=d=>LANG==="kk"?KK_M[d.getMonth()].slice(0,3):d.toLocaleDateString(LOC(),{month:"short"}).replace(".","").slice(0,4);
+function initials(n){const w=n.replace(/[^A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі ]/g," ").trim().split(/\s+/);return ((w[0]||"?")[0]+((w[1]||"")[0]||"")).toUpperCase()}
+
+function flagLabel(f,s){
+  if(f.k==="trial")return L("Пробник за "+tg(s.trial.a)+" стал платным",tg(s.trial.a)+"-лік сынақ ақылыға айналды","The "+tg(s.trial.a)+" trial turned paid");
+  if(f.k==="up")return L("Подорожала на "+f.n+"%",f.n+"% қымбаттады","Price up "+f.n+"%");
+  if(f.k==="unk")return L("Неизвестный сервис","Белгісіз сервис","Unknown service");
+  if(f.k==="off")return L("Похоже, уже отменена","Тоқтатылған сияқты","Looks cancelled already");
+  if(f.k==="dup")return L("Дубль: «"+catName(f.cat)+"» уже есть в "+nm(f.with),"Қайталану: «"+catName(f.cat)+"» "+nm(f.with)+" ішінде бар","Duplicate: "+catName(f.cat)+" already in "+nm(f.with));
+  return "";
+}
+
+function letterFor(s){
+  const start=fmtD(s.trial?s.trial.d:s.dates[0]),trialA=s.trial?tg(s.trial.a):"",n=s.count,sum=tg(s.history.slice(1).reduce((a,b)=>a+b,0)),name=nm(s.name);
+  if(LANG==="kk")return `Кімге: ${name} қолдау қызметі
+Тақырып: сынақ мерзімінен кейінгі төлемдерді қайтару
+
+Сәлеметсіз бе.
+
+${start} күні мен ${trialA} сынақ мерзімін рәсімдедім. Ол аяқталғаннан кейін картамнан айына ${tg(s.last)} шегеріле бастады. Мен сервисті пайдаланған жоқпын, ақылы тарифке өту туралы хабарлама алмадым.
+
+Автожаңартуды өшіріп, жалпы сомасы ${sum} болатын ${n} төлемді шегерілген картама қайтаруыңызды сұраймын.
+
+Негіз: Қазақстан Республикасының «Тұтынушылардың құқықтарын қорғау туралы» Заңы. Автоматты жаңарту шарттары төлемге дейін маған анық жеткізілмегенін ескеруіңізді сұраймын.
+
+Жауапты 10 күн ішінде жіберуіңізді сұраймын.
+Құрметпен, [Аты-жөні], [телефон / аккаунт e-mail]`;
+  if(LANG==="en")return `To: ${name} support
+Subject: refund of charges after a trial period
+
+Hello,
+
+On ${start} I signed up for a ${trialA} trial. After it ended, my card was charged ${tg(s.last)} per month. I have not used the service and did not receive a notice about switching to a paid plan.
+
+Please turn off auto-renewal and refund ${n} charge${n===1?"":"s"} totalling ${sum} to the card they were taken from.
+
+Basis: the Law of the Republic of Kazakhstan "On Consumer Protection". Please also note that the auto-renewal terms were not clearly disclosed to me before payment.
+
+Please reply within 10 days.
+Regards, [Full name], [phone / account e-mail]`;
+  return `Кому: служба поддержки ${name}
+Тема: возврат списаний после пробного периода
+
+Здравствуйте.
+
+${start} я оформил(а) пробный период за ${trialA}. После его окончания с карты начали списываться ${tg(s.last)} в месяц. Сервисом я не пользовался(ась), а уведомление о переходе на платный тариф не получил(а).
+
+Прошу отключить автопродление и вернуть ${n} списани${n===1?"е":"я"} на общую сумму ${sum} на карту, с которой они были произведены.
+
+Основание: Закон Республики Казахстан «О защите прав потребителей». Прошу также учесть, что условия автоматического продления не были мне явно доведены до оплаты.
+
+Ответ прошу направить в течение 10 дней.
+С уважением, [ФИО], [телефон / e-mail аккаунта]`;
+}
+
+function render(){
+  const {subs}=state;
+  const nonEss=subs.filter(s=>s.active&&!s.essential);
+  const month=nonEss.reduce((a,s)=>a+s.monthly,0);
+  const leakY=subs.filter(s=>s.leak).reduce((a,s)=>a+s.yearly,0);
+  const nLeak=subs.filter(s=>s.leak).length,nEss=subs.filter(s=>s.essential).length;
+  $("#fileName").textContent=state.file===null?DEMO_NAME():state.file;
+  $("#kCount").textContent=subs.filter(s=>s.active).length;
+  $("#kCountS").textContent=L(nonEss.length+" "+plural(nonEss.length,"подписка","подписки","подписок")+", "+nEss+" "+plural(nEss,"обязательный","обязательных","обязательных"),
+    nonEss.length+" жазылым, "+nEss+" міндетті",cnt(nonEss.length,[],"","subscription")+", "+nEss+" essential");
+  $("#kMonth").textContent=tg(month);
+  $("#kYear").textContent=tg(month*12);
+  $("#kYearS").textContent=state.start?L("по выписке ","үзінді бойынша ","statement ")+fmtD(state.start)+" — "+fmtD(state.end):"";
+  $("#kLeak").textContent=tg(leakY);
+  $("#kLeakS").textContent=nLeak?L(nLeak+" "+plural(nLeak,"подписка","подписки","подписок")+" к отмене",nLeak+" жазылымнан бас тарту керек",cnt(nLeak,[],"","subscription")+" to cancel"):L("утечек не нашли","шығын табылмады","no leaks found");
+  $("#heroLeak").textContent="≈ "+tg(leakY);
+
+  const vis=subs.filter(s=>state.filter==="all"||(state.filter==="leak"?s.leak||s.flags.some(f=>f.k==="up"):s.essential));
+  const box=$("#subs");
+  if(!vis.length){box.innerHTML='<div class="essentials-note">'+(subs.length?L("В этом фильтре пусто.","Бұл сүзгіде ештеңе жоқ.","Nothing in this filter."):L("Регулярных платежей не найдено. Нужна выписка минимум за 2–3 месяца.","Тұрақты төлемдер табылмады. Кемінде 2–3 айлық үзінді керек.","No recurring payments found. You need a statement covering at least 2–3 months."))+'</div>';}
+  else box.innerHTML=vis.map((s,i)=>{
+    const c=s.cats[0],on=state.sel.has(s.key),op=state.open.has(s.key),name=nm(s.name);
+    const pills=(s.essential?['<span class="pill ok">'+L("Обязательный платёж","Міндетті төлем","Essential payment")+'</span>']:[])
+      .concat(s.flags.map(f=>'<span class="pill '+f.t+'">'+esc(flagLabel(f,s))+'</span>'))
+      .concat(s.keepNote&&!s.leak?['<span class="pill ok">'+esc(L("Оставить: лучшая цена за ","Қалдыру: ең тиімді баға — ","Keep: best price for ")+s.keepNote.map(x=>catName(x).toLowerCase()).join(L(" и "," мен "," and ")))+'</span>']:[]);
+    const mx=Math.max(...s.history);
+    let detail="";
+    if(op){
+      const nH=s.history.length,lastD=fmtD(s.dates[s.dates.length-1]);
+      const why=s.essential?L("Регулярный обязательный платёж. Мы его показываем, но не считаем утечкой.","Тұрақты міндетті төлем. Біз оны көрсетеміз, бірақ шығын деп санамаймыз.","A regular essential payment. We show it but don't count it as a leak.")
+        :L(`Платёж <b>${esc(s.raw)}</b> повторяется ${per(s.period,1)}, найдено ${nH} ${plural(nH,"списание","списания","списаний")}. `,`<b>${esc(s.raw)}</b> төлемі ${per(s.period,1)} қайталанады, ${nH} төлем табылды. `,`The payment <b>${esc(s.raw)}</b> repeats ${per(s.period,1)}, ${nH} charges found. `)
+         +(s.active?L("Следующее ожидается около <b>","Келесісі шамамен <b>","Next one expected around <b>")+fmtD(s.next)+L("</b>.","</b> күтіледі.","</b>."):L("Последнее было "+lastD+", новых не видно.","Соңғысы "+lastD+" болды, жаңалары жоқ.","The last one was on "+lastD+", no new ones since."));
+      const steps=s.cancel?s.cancel.split(" → ").map((x,j)=>(j===0?L("Откройте ","Ашыңыз: ","Open "):"")+step(x))
+        :[L("Найдите сервис в приложении банка → Карта → Подписки","Банк қосымшасында сервисті табыңыз → Карта → Жазылымдар","Find the service in your bank app → Card → Subscriptions"),L("или напишите в поддержку продавца «"+s.raw+"» с требованием отключить автосписание","немесе «"+s.raw+"» сатушысының қолдау қызметіне автотөлемді өшіруді талап етіп жазыңыз","or write to the merchant “"+s.raw+"” support and demand they stop auto-charging")];
+      detail=`<div class="sub-detail">
+        <div class="hist" aria-label="${L("История списаний","Төлемдер тарихы","Charge history")}">${s.history.map((a,j)=>'<i class="'+(s.trial&&j===0?"first":"")+'" style="height:'+Math.max(6,a/mx*100)+'%" title="'+tg(a)+'"></i>').join("")}</div>
+        <p class="why">${why}</p>
+        ${!s.essential?`<div><div class="eyebrow" style="margin-bottom:6px">${L("Как отменить","Қалай бас тарту керек","How to cancel")}</div><ol class="steps">${steps.map(x=>"<li>"+esc(x)+"</li>").join("")}<li>${L("Через 2 дня после даты списания проверьте, что новых платежей нет","Төлем күнінен 2 күн өткен соң жаңа төлем жоқ екенін тексеріңіз","2 days after the charge date, check that no new payment went through")}</li></ol></div>`:""}
+        ${s.trial?`<div><div class="eyebrow" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">${L("Претензия на возврат","Қайтаруға шағым","Refund claim")} <button class="btn ghost small" data-copy="${esc(s.key)}" type="button">${L("Скопировать","Көшіру","Copy")}</button></div><div class="letter">${esc(letterFor(s))}</div></div>`:""}
+      </div>`;
+    }
+    return `<div class="sub" style="animation-delay:${Math.min(i,10)*30}ms">
+      <div class="sub-row" data-open="${esc(s.key)}" role="button" tabindex="0" aria-expanded="${op}">
+        <div class="ava" style="background:${CAT_COLOR[c]}">${esc(initials(name))}</div>
+        <div class="sub-main"><div class="sub-name">${esc(name)}</div><div class="sub-meta">${s.cats.map(catName).join(" · ")} · ${per(s.period,0)}${s.variable?L(" · сумма меняется"," · сома өзгереді"," · amount varies"):""}</div><div class="pills">${pills.join("")}</div></div>
+        <div class="sub-amt"><div class="m">${tg(s.last)}</div><div class="y">${tg(s.yearly)}/${L("год","жыл","yr")}</div></div>
+        ${s.essential||!s.active?'<span></span>':`<label class="tog" title="${L("Отменить","Бас тарту","Cancel")}" onclick="event.stopPropagation()"><input type="checkbox" data-sel="${esc(s.key)}" ${on?"checked":""} aria-label="${esc(L("Отменить ","Бас тарту: ","Cancel ")+name)}"><span></span></label>`}
+      </div>${detail}</div>`;
+  }).join("");
+  renderSide();renderSave();
+}
+
+function renderSide(){
+  const {subs,start,end}=state;
+  const live=subs.filter(s=>!s.essential);
+  if(!start){$("#chart").innerHTML="";$("#cats").innerHTML="";return}
+  const months=[];let d=new Date(start.getFullYear(),start.getMonth(),1);
+  while(d<=end){months.push(d);d=new Date(d.getFullYear(),d.getMonth()+1,1)}
+  const data=months.map(m=>{let keep=0,leak=0;for(const s of live){s.dates.forEach((dt,j)=>{if(dt.getFullYear()===m.getFullYear()&&dt.getMonth()===m.getMonth()){const a=s.history[j];if(s.leak)leak+=a;else keep+=a}})}return{m,keep,leak}});
+  const W=280,H=150,pl=34,pb=18,pt=6;const mx=Math.max(1,...data.map(x=>x.keep+x.leak));
+  const st=niceStep(mx/3);const top=Math.ceil(mx/st)*st;
+  const y=v=>pt+(H-pt-pb)*(1-v/top);const bw=(W-pl)/data.length;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("Траты на подписки по месяцам","Айлар бойынша жазылым шығындары","Subscription spend by month")}">`;
+  for(let v=0;v<=top;v+=st)svg+=`<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pl-4}" y="${y(v)+3}" text-anchor="end">${v>=1000?(v/1000)+"k":v}</text>`;
+  data.forEach((x,i)=>{const X=pl+i*bw+bw*0.2,w=bw*0.6;
+    svg+=`<rect x="${X}" y="${y(x.keep)}" width="${w}" height="${y(0)-y(x.keep)}" fill="var(--accent)" rx="2"><title>${tg(x.keep)}</title></rect>`;
+    if(x.leak)svg+=`<rect x="${X}" y="${y(x.keep+x.leak)}" width="${w}" height="${y(x.keep)-y(x.keep+x.leak)}" fill="var(--leak)" rx="2"><title>${L("утечка","шығын","leak")} ${tg(x.leak)}</title></rect>`;
+    svg+=`<text x="${X+w/2}" y="${H-4}" text-anchor="middle">${esc(fmtM(x.m))}</text>`});
+  $("#chart").innerHTML=svg+"</svg>";
+  const cm={};for(const s of live.filter(s=>s.active)){const k=s.cats[0];cm[k]=(cm[k]||0)+s.monthly}
+  const arr=Object.entries(cm).sort((a,b)=>b[1]-a[1]);const m2=Math.max(1,...arr.map(a=>a[1]));
+  $("#cats").innerHTML=arr.map(([k,v])=>`<div class="cat"><span>${catName(k)}</span><span class="num">${tg(v)}</span><div class="bar"><i style="width:${v/m2*100}%;background:${CAT_COLOR[k]}"></i></div></div>`).join("")||'<p class="why">'+L("Нет данных","Деректер жоқ","No data")+'</p>';
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x)));const n=x/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p}
+
+function renderSave(){
+  const sel=state.subs.filter(s=>state.sel.has(s.key));
+  const y=sel.reduce((a,s)=>a+s.yearly,0),n=sel.length;
+  $("#saveBig").textContent=tg(y)+L(" в год"," жылына"," a year");
+  const don=Math.floor(y/1800);
+  $("#saveSm").textContent=n?L(`${n} ${plural(n,"подписка","подписки","подписок")} к отмене · это ${don} ${plural(don,"донер","донера","донеров")} или ${tg(y/12)} каждый месяц`,
+    `${n} жазылымнан бас тарту · бұл ${don} донер немесе ай сайын ${tg(y/12)}`,
+    `${cnt(n,[],"","subscription")} to cancel · that's ${don} doner kebab${don===1?"":"s"} or ${tg(y/12)} every month`)
+    :L("Отметьте подписки, которые хотите отменить","Бас тартқыңыз келетін жазылымдарды белгілеңіз","Mark the subscriptions you want to cancel");
+}
+
+let lastTotal=0;
+function load(text,name){
+  $("#err").hidden=true;
+  try{
+    const {tx,total}=parseStatement(text);
+    const r=detect(tx);
+    state.subs=r.subs;state.start=r.start;state.end=r.end;state.open=new Set();state.file=name;state.docId=null;
+    state.sel=new Set(r.subs.filter(s=>s.leak).map(s=>s.key));
+    const lk=r.subs.find(s=>s.leak);if(lk)state.open.add(lk.key);
+    lastTotal=total;infoText();
+    render();
+    if(name!==null)saveAnalysis(total);else renderAcc();
+  }catch(e){$("#err").textContent=e.message;$("#err").hidden=false}
+}
+function infoText(){$("#parseInfo").textContent=lastTotal?L("Прочитано "+lastTotal+" "+plural(lastTotal,"операция","операции","операций"),lastTotal+" операция оқылды",lastTotal+" transactions read"):"—"}
+
+/* ---------- события ---------- */
+document.addEventListener("click",e=>{
+  const lg=e.target.closest("[data-lang]");
+  if(lg){setLang(lg.dataset.lang);return}
+  const o=e.target.closest("[data-open]");
+  if(o&&!e.target.closest(".tog")){const k=o.dataset.open;state.open.has(k)?state.open.delete(k):state.open.add(k);render();return}
+  const c=e.target.closest("[data-copy]");
+  if(c){const s=state.subs.find(x=>x.key===c.dataset.copy);copy(letterFor(s),L("Претензия скопирована","Шағым көшірілді","Claim copied"))}
+  const f=e.target.closest("[data-f]");
+  if(f){state.filter=f.dataset.f;document.querySelectorAll("[data-f]").forEach(b=>b.setAttribute("aria-pressed",b===f));render()}
+});
+document.addEventListener("keydown",e=>{const o=e.target.closest&&e.target.closest("[data-open]");if(o&&(e.key==="Enter"||e.key===" ")){e.preventDefault();o.click()}});
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.sel;if(k){e.target.checked?state.sel.add(k):state.sel.delete(k);renderSave();saveSel()}});
+$("#btnDemo").onclick=()=>load(demoCSV(),null);
+$("#btnPaste").onclick=()=>{$("#pasteBox").hidden=!$("#pasteBox").hidden;if(!$("#pasteBox").hidden)$("#pasteArea").focus()};
+$("#btnAnalyze").onclick=()=>{const t=$("#pasteArea").value.trim();if(!t){$("#err").textContent=L("Вставьте содержимое выписки в поле выше.","Үзінді мәтінін жоғарыдағы өріске қойыңыз.","Paste the statement text into the field above.");$("#err").hidden=false;return}load(t,L("вставленный текст","қойылған мәтін","pasted text"))};
+$("#btnShowDemoCsv").onclick=()=>{$("#pasteArea").value=demoCSV().split("\n").slice(0,12).join("\n")+"\n…"};
+$("#fileInput").onchange=e=>{const f=e.target.files[0];if(f)readFile(f)};
+function readFile(f){if(/\.pdf$/i.test(f.name)||f.type==="application/pdf"){$("#err").textContent=L("PDF пока не читаем напрямую. Откройте выписку, выделите весь текст (Ctrl+A), скопируйте и вставьте через «Вставить текст».","PDF-ті әзірге тікелей оқымаймыз. Үзіндіні ашып, бүкіл мәтінді белгілеп (Ctrl+A), көшіріп, «Мәтін қою» арқылы қойыңыз.","We can't read PDFs directly yet. Open the statement, select all text (Ctrl+A), copy it and use “Paste text”.");$("#err").hidden=false;$("#pasteBox").hidden=false;return}const r=new FileReader();r.onload=()=>{let t=r.result;if(/\uFFFD/.test(t.slice(0,500))){const r2=new FileReader();r2.onload=()=>load(r2.result,f.name);r2.readAsText(f,"windows-1251");return}load(t,f.name)};r.readAsText(f,"utf-8")}
+const drop=$("#app");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();$("#drop").classList.add("over")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();if(ev==="drop"||!drop.contains(e.relatedTarget))$("#drop").classList.remove("over")}));
+drop.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)readFile(f)});
+$("#btnPlan").onclick=()=>{
+  const sel=state.subs.filter(s=>state.sel.has(s.key));
+  if(!sel.length){toast(L("Сначала отметьте подписки","Алдымен жазылымдарды белгілеңіз","Mark some subscriptions first"));return}
+  const yr=L(" в год"," жылына"," a year");
+  const t=L("План отмены подписок · Утечка","Жазылымдардан бас тарту жоспары · Утечка","Subscription cancellation plan · Utechka")+"\n\n"+sel.map((s,i)=>`${i+1}. ${nm(s.name)} — ${tg(s.last)}/${per(s.period,2)}, ${tg(s.yearly)}${yr}\n   ${L("Отменить до","Бас тарту мерзімі:","Cancel before")} ${fmtD(new Date(+s.next-2*DAY))}\n   ${s.cancel?s.cancel.split(" → ").map(step).join(" → "):L("Написать в поддержку продавца «","«","Write to the merchant “")+s.raw+L("»","» сатушысының қолдау қызметіне жазу","” support")}`).join("\n\n")+`\n\n${L("Итого экономия:","Жалпы үнем:","Total savings:")} ${tg(sel.reduce((a,s)=>a+s.yearly,0))}${yr}`;
+  copy(t,L("План скопирован","Жоспар көшірілді","Plan copied"));
+};
+function copy(t,msg){const done=()=>toast(msg);try{navigator.clipboard.writeText(t).then(done,()=>fallback(t,done))}catch(e){fallback(t,done)}}
+function fallback(t,done){const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(e){toast(L("Не получилось скопировать","Көшіру мүмкін болмады","Couldn't copy"))}ta.remove()}
+let tt;function toast(m){let el=$(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.appendChild(el)}el.textContent=m;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2200)}
+
+/* ---------- аккаунт и личный кабинет ----------
+   Вход — аккаунт Claude того, кто открыл страницу. Разборы лежат в data/users/<id>/:
+   их видит только сам человек, даже владелец страницы — нет. Сохраняем только
+   найденные подписки, а не исходную выписку. */
+const ACC={status:"loading",user:null,db:null,id:null,me:null,col:null,list:[],confirmDel:null,saving:false};
+const packSub=s=>({key:s.key,raw:s.raw,name:s.name,cats:s.cats,cancel:s.cancel,essential:s.essential,known:s.known,period:s.period,count:s.count,
+  last:s.last,first:s.first,monthly:s.monthly,yearly:s.yearly,active:s.active,next:+s.next,trial:s.trial?{a:s.trial.a,d:+s.trial.d}:null,
+  history:s.history,dates:s.dates.map(d=>+d),variable:s.variable,flags:s.flags,keepNote:s.keepNote||null,leak:s.leak});
+const unpackSub=s=>Object.assign({},s,{next:new Date(s.next),trial:s.trial?{a:s.trial.a,d:new Date(s.trial.d)}:null,dates:s.dates.map(d=>new Date(d)),keepNote:s.keepNote||undefined,flags:s.flags||[]});
+
+async function initAccount(){
+  if(!window.claude||typeof claude.use!=="function"){ACC.status="none";ACC.offClaude=true;renderAcc();return}
+  const [user,db]=await Promise.all([claude.use("user"),claude.use("db")]);
+  ACC.user=user;ACC.db=db;
+  if(user){ACC.me=await user.me();ACC.id=ACC.me.id}
+  if(!db||!ACC.id){ACC.status="none";renderAcc();return}
+  ACC.col=db.collection("data/users/"+ACC.id);
+  ACC.status="ok";renderAcc();
+  ACC.col.where("kind","==","analysis").onSnapshot(snap=>{
+    ACC.list=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>b.createdAt-a.createdAt);
+    renderAcc();
+  },()=>{ACC.status="none";renderAcc()});
+}
+async function saveAnalysis(total){
+  if(ACC.status!=="ok"||!ACC.col)return;
+  const ref=ACC.col.doc("a"+Date.now());
+  state.docId=ref.id;ACC.saving=true;renderAcc();
+  try{
+    await ref.set({kind:"analysis",createdAt:Date.now(),file:state.file,start:+state.start,end:+state.end,total,
+      subs:state.subs.map(packSub),sel:[...state.sel]});
+    toast(L("Разбор сохранён в кабинет","Талдау кабинетке сақталды","Analysis saved to your account"));
+  }catch(e){
+    state.docId=null;
+    if(e&&e.code==="invalid_argument"){ACC.status="readonly"}
+    else if(e&&e.code==="quota_exceeded"){toast(L("Место в кабинете закончилось: удалите старые разборы","Кабинетте орын бітті: ескі талдауларды өшіріңіз","Your account is full: delete old analyses"))}
+    else toast(L("Не получилось сохранить, попробуйте ещё раз","Сақтау мүмкін болмады, қайта көріңіз","Couldn't save, try again"));
+  }
+  ACC.saving=false;renderAcc();
+}
+let selTimer=null;
+function saveSel(){
+  if(!state.docId||ACC.status!=="ok")return;
+  clearTimeout(selTimer);
+  const id=state.docId;
+  selTimer=setTimeout(()=>{ACC.col.doc(id).update({sel:[...state.sel]}).catch(()=>{})},800);
+}
+function openAnalysis(id){
+  const a=ACC.list.find(x=>x.id===id);if(!a)return;
+  state.subs=(a.subs||[]).map(unpackSub);state.start=new Date(a.start);state.end=new Date(a.end);
+  state.sel=new Set(a.sel||[]);state.open=new Set();state.file=a.file;state.docId=a.id;
+  const lk=state.subs.find(s=>s.leak);if(lk)state.open.add(lk.key);
+  lastTotal=a.total||0;infoText();$("#err").hidden=true;
+  render();renderAcc();
+  document.getElementById("app").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function deleteAnalysis(id){
+  ACC.confirmDel=null;
+  try{await ACC.col.doc(id).delete();if(state.docId===id)state.docId=null;toast(L("Разбор удалён","Талдау өшірілді","Analysis deleted"))}
+  catch(e){toast(L("Не получилось удалить","Өшіру мүмкін болмады","Couldn't delete"))}
+  renderAcc();
+}
+function renderAcc(){
+  const chip=$("#accChip"),box=$("#cabinet"),me=ACC.me;
+  const name=(me&&me.name)||L("Мой аккаунт","Менің аккаунтым","My account");
+  if(ACC.status==="ok"||ACC.status==="readonly"){
+    chip.hidden=false;chip.innerHTML='<img alt=""><span></span>';chip.querySelector("img").src=me.avatarUrl;chip.querySelector("span").textContent=name;
+    chip.setAttribute("aria-label",L("Личный кабинет","Жеке кабинет","My account"));
+  }else chip.hidden=true;
+
+  const head=t=>'<div class="cab-head">'+t+'</div>';
+  if(ACC.status==="loading"){box.innerHTML=head('<div class="who"><h3>'+L("Личный кабинет","Жеке кабинет","My account")+'</h3><p>'+L("Проверяем вход…","Кіруді тексеріп жатырмыз…","Checking sign-in…")+'</p></div>');return}
+  if(ACC.status==="none"){
+    box.innerHTML=head('<div class="who"><h3>'+L("Личный кабинет","Жеке кабинет","My account")+'</h3><p>'+
+      (ACC.offClaude?L("В этой версии сайта демо работает без входа, но разборы не сохраняются. Личный кабинет со входом пока работает в версии на claude.ai.",
+        "Сайттың бұл нұсқасында демо кірусіз жұмыс істейді, бірақ талдаулар сақталмайды. Кіруі бар жеке кабинет әзірге claude.ai нұсқасында жұмыс істейді.",
+        "On this version of the site the demo works without signing in, but analyses aren't saved. The account area currently works in the claude.ai version."):
+      L("Чтобы сохранять свои разборы, откройте эту страницу, войдя в аккаунт Claude. Демо работает и без входа.",
+        "Өз талдауларыңызды сақтау үшін осы бетті Claude аккаунтына кіріп ашыңыз. Демо кірусіз де жұмыс істейді.",
+        "To save your analyses, open this page while signed in to Claude. The demo works without signing in."))+'</p></div>');
+    return;
+  }
+  let html=head('<img alt=""><div class="who"><h3></h3><p>'+
+    L("Ваши разборы видите только вы. Даже владелец страницы их не видит. Храним найденные подписки, а не саму выписку.",
+      "Талдауларыңызды тек сіз көресіз. Беттің иесі де көрмейді. Үзіндінің өзін емес, табылған жазылымдарды ғана сақтаймыз.",
+      "Only you can see your analyses, not even the page owner. We store the subscriptions we found, not the statement itself.")+'</p></div>');
+  if(ACC.status==="readonly"){
+    html+='<p class="cab-note">'+L("С вашим уровнем доступа сохранять нельзя. Попросите владельца страницы выдать вам доступ «Участник» (Contributor).",
+      "Сіздің қолжетімділік деңгейіңізбен сақтауға болмайды. Бет иесінен «Қатысушы» (Contributor) рұқсатын сұраңыз.",
+      "Your access level can't save. Ask the page owner to give you Contributor access.")+'</p>';
+  }else if(!ACC.list.length){
+    html+='<p class="cab-note">'+(ACC.saving?L("Сохраняем…","Сақтап жатырмыз…","Saving…"):L("Здесь появятся ваши разборы. Загрузите свою выписку, и разбор сохранится сюда автоматически.",
+      "Мұнда сіздің талдауларыңыз пайда болады. Өз үзіндіңізді жүктеңіз, талдау автоматты түрде осында сақталады.",
+      "Your analyses will appear here. Upload your own statement and the analysis is saved here automatically."))+'</p>';
+  }else{
+    html+='<div class="eyebrow">'+L("Мои разборы","Менің талдауларым","My analyses")+' · '+ACC.list.length+'</div><div class="cab-list">'+ACC.list.map(a=>{
+      const subs=a.subs||[],leak=subs.filter(s=>s.leak).reduce((x,s)=>x+s.yearly,0),n=subs.filter(s=>s.leak).length;
+      const when=new Date(a.createdAt),dateStr=fmtD(when)+" "+when.getFullYear();
+      const range=a.start?fmtD(new Date(a.start))+" — "+fmtD(new Date(a.end)):"";
+      const del=ACC.confirmDel===a.id
+        ?`<button class="btn small danger" type="button" data-del-yes="${esc(a.id)}">${L("Точно удалить","Иә, өшіру","Yes, delete")}</button><button class="btn ghost small" type="button" data-del-no="1">${L("Отмена","Болдырмау","Keep")}</button>`
+        :`<button class="btn ghost small" type="button" data-del="${esc(a.id)}">${L("Удалить","Өшіру","Delete")}</button>`;
+      return `<div class="cab-row${state.docId===a.id?" cur":""}"><div><div class="t">${esc(a.file||"—")}</div><div class="m">${esc(dateStr)} · ${esc(range)} · ${cnt(subs.length,["подписка","подписки","подписок"],"жазылым","subscription")}</div></div>
+        <div class="lk">${n?tg(leak)+L("/год","/жыл","/yr"):L("без утечек","шығынсыз","no leaks")}</div>
+        <div class="cab-actions"><button class="btn ghost small" type="button" data-opena="${esc(a.id)}">${state.docId===a.id?L("Открыт","Ашық","Open now"):L("Открыть","Ашу","Open")}</button>${del}</div></div>`;
+    }).join("")+'</div>';
+  }
+  box.innerHTML=html;
+  const img=box.querySelector(".cab-head img");if(img)img.src=me.avatarUrl;
+  const h=box.querySelector(".cab-head h3");if(h)h.textContent=name;
+}
+document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-opena]");if(o){openAnalysis(o.dataset.opena);return}
+  const d=e.target.closest("[data-del]");if(d){ACC.confirmDel=d.dataset.del;renderAcc();return}
+  const y=e.target.closest("[data-del-yes]");if(y){deleteAnalysis(y.dataset.delYes);return}
+  if(e.target.closest("[data-del-no]")){ACC.confirmDel=null;renderAcc()}
+});
+
+/* ---------- юнит-экономика ---------- */
+function econ(){
+  const p=+$("#sPrice").value,cv=+$("#sConv").value,ch=+$("#sChurn").value,cac=+$("#sCac").value;
+  const mo=L("мес","ай","mo");
+  $("#vPrice").textContent=p+" ₸/"+mo;$("#vConv").textContent=cv+"%";$("#vChurn").textContent=ch+"%";$("#vCac").textContent=cac+" ₸";
+  const margin=0.85,ltv=p*margin/(ch/100),cacP=cac/(cv/100),ratio=ltv/cacP,pay=cacP/(p*margin);
+  $("#oLtv").textContent=tg(ltv);$("#oCac").textContent=tg(cacP);
+  const col=ratio>=3?"var(--ok)":ratio>=1?"var(--warn)":"var(--leak)";
+  $("#oRatio").textContent=ratio.toFixed(1)+"×";$("#oRatio").style.color=col;
+  $("#oPay").textContent=pay<1?"< 1 "+mo:pay.toFixed(1)+" "+mo;
+  $("#oVerdict").textContent=ratio>=3?L("Здоровая экономика: каждый тенге в маркетинг возвращает "+ratio.toFixed(1)+" ₸.","Сау экономика: маркетингке салынған әр теңге "+ratio.toFixed(1)+" ₸ қайтарады.","Healthy economics: every tenge spent on marketing returns "+ratio.toFixed(1)+" ₸.")
+    :ratio>=1?L("На грани: окупается, но масштабировать рекламой рано. Нужен органический трафик.","Шекарада: өзін ақтайды, бірақ жарнамамен масштабтауға ерте. Органикалық трафик керек.","Borderline: it pays back, but it's too early to scale with ads. You need organic traffic.")
+    :L("Убыточно: снижайте CAC или поднимайте конверсию.","Шығынды: CAC-ты төмендетіңіз немесе конверсияны көтеріңіз.","Loss-making: lower CAC or raise conversion.");
+  $("#oVerdict").style.color=col;
+}
+["sPrice","sConv","sChurn","sCac"].forEach(id=>$("#"+id).addEventListener("input",econ));
+
+/* ---------- чек-лист ---------- */
+const TODO=[
+ [["Дни 1–3","1–3 күндер","Days 1–3"],["Провести 15 интервью: «покажи историю платежей в Kaspi за 3 месяца». Считать, у скольких найдётся утечка","15 сұхбат өткізу: «Kaspi-дегі 3 айлық төлем тарихыңды көрсетші». Қаншасында шығын табылатынын санау","Run 15 interviews: “show me your Kaspi payment history for 3 months”. Count how many have a leak"]],
+ [["Дни 3–5","3–5 күндер","Days 3–5"],["Собрать 10 реальных выписок Kaspi и Halyk (с согласия), прогнать через детектор, записать ошибки","Kaspi мен Halyk-тың 10 нақты үзіндісін жинау (келісіммен), детектордан өткізіп, қателерді жазу","Collect 10 real Kaspi and Halyk statements (with consent), run them through the detector, log the errors"]],
+ [["Дни 5–10","5–10 күндер","Days 5–10"],["Снять 10 Reels и шортсов «разбор выписки» на русском и казахском. Замерить охваты и комментарии","Орыс және қазақ тілдерінде «үзінді талдау» туралы 10 Reels пен шортс түсіру. Қамту мен пікірлерді өлшеу","Shoot 10 Reels and Shorts “statement breakdown” in Russian and Kazakh. Measure reach and comments"]],
+ [["Дни 7–14","7–14 күндер","Days 7–14"],["Запустить Telegram-бота: пересылка выписки → разбор в ответ. Собрать 300 пользователей","Telegram-ботты іске қосу: үзінді жібересің → жауапқа талдау. 300 пайдаланушы жинау","Launch the Telegram bot: forward a statement → get a breakdown back. Get 300 users"]],
+ [["Дни 14–20","14–20 күндер","Days 14–20"],["Научить бота читать PDF Kaspi напрямую: это большая часть будущих загрузок","Ботты Kaspi PDF-ін тікелей оқуға үйрету: болашақ жүктеулердің басым бөлігі осы","Teach the bot to read Kaspi PDFs directly: that's most future uploads"]],
+ [["Дни 20–25","20–25 күндер","Days 20–25"],["Тест цены: показать paywall Pro за 690 / 990 / 1 490 ₸ трём группам","Баға тесті: үш топқа Pro paywall-ын 690 / 990 / 1 490 ₸ бағасымен көрсету","Price test: show the Pro paywall at 690 / 990 / 1,490 ₸ to three groups"]],
+ [["Дни 25–30","25–30 күндер","Days 25–30"],["Собрать метрики в одностраничник и подать в Astana Hub, MOST Ventures и 20 ангелам","Метрикаларды бір беттік құжатқа жинап, Astana Hub, MOST Ventures және 20 бизнес-періштеге жіберу","Put the metrics into a one-pager and apply to Astana Hub, MOST Ventures and 20 angels"]]
+];
+const done=new Set(store.get("utechka-todo",[]));
+function renderTodo(){$("#todo").innerHTML=TODO.map((t,i)=>`<label for="todo${i}"><input type="checkbox" id="todo${i}" data-todo="${i}" ${done.has(i)?"checked":""}><span><span class="d">${t[0][LI()]}</span>${esc(t[1][LI()])}</span></label>`).join("")}
+$("#todo").addEventListener("change",e=>{const i=+e.target.dataset.todo;e.target.checked?done.add(i):done.delete(i);store.set("utechka-todo",[...done])});
+
+function setLang(l){
+  if(!LANGS.includes(l))return;
+  LANG=l;store.set("utechka-lang",l);
+  applyLang();econ();renderTodo();infoText();renderAcc();
+  if(!$("#err").hidden)$("#err").hidden=true;
+  if(state.start)render();
+}
+
+collect();
+load(demoCSV(),null);
+setLang(LANG);
+initAccount();
+})();
+</script>
+
+</body>
+</html>
