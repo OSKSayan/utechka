@@ -285,6 +285,49 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 footer{padding-block:40px;color:var(--muted);font-size:.85rem}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 
+
+.steps3{list-style:none;margin:0 0 20px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;counter-reset:st}
+.steps3 li{counter-increment:st;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:4px;align-content:start;font-size:.92rem;color:var(--muted)}
+.steps3 li::before{content:counter(st);display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-family:var(--display);font-weight:700;margin-bottom:6px}
+.steps3 b{color:var(--ink);font-size:1.02rem}
+@media (max-width:760px){.steps3{grid-template-columns:1fr}}
+.upload{margin:18px;border:2px dashed var(--line);border-radius:16px;padding:28px 18px;display:grid;justify-items:center;gap:10px;text-align:center;transition:border-color .15s,background .15s}
+.upload.over{border-color:var(--accent);background:var(--accent-soft)}
+.btn.big{padding:16px 32px;font-size:1.08rem;cursor:pointer}
+.status{font-size:.9rem;color:var(--muted);max-width:60ch}
+.file-line{font-family:var(--mono);font-size:.78rem;overflow-wrap:anywhere}
+.linkbtn{background:none;border:0;color:var(--accent);font-weight:700;cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:3px;font-size:.9rem}
+.err{font-size:1rem}
+.example-note{margin:0 18px;padding:12px 16px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-weight:600;font-size:.95rem}
+.verdict{margin:18px;padding:22px;border-radius:16px;background:var(--sunk);display:grid;gap:10px}
+.v-main{font-family:var(--display);font-size:clamp(1.25rem,3vw,1.8rem);font-weight:700;line-height:1.25;text-wrap:balance}
+.v-main b{color:var(--accent);white-space:nowrap}
+.v-sub{color:var(--muted)}
+.v-leak,.v-ok{font-size:1.05rem;font-weight:600;padding:14px 16px;border-radius:12px}
+.v-leak{color:var(--leak);background:var(--leak-soft)}
+.v-leak b{white-space:nowrap}
+.v-ok{color:var(--ok);background:var(--ok-soft)}
+.grp{border-top:1px solid var(--line)}
+.grp-h{padding:18px 18px 4px;display:grid;gap:4px}
+.grp-h h3{display:flex;align-items:center;gap:8px}
+.grp-h p{color:var(--muted);font-size:.9rem}
+.grp-n{font-family:var(--mono);font-size:.8rem;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.grp-cancel .grp-h h3{color:var(--leak)}
+.grp-cancel .grp-n{background:var(--leak-soft);color:var(--leak)}
+.grp-off .sub,.grp-ess .sub{opacity:.8}
+.sub-row{cursor:default;align-items:start}
+.sub-row:hover{background:transparent}
+.reason{font-size:.92rem;margin-top:6px;max-width:62ch}
+.tog-wrap{display:grid;justify-items:center;gap:4px;cursor:pointer}
+.tog-wrap small{font-size:.72rem;color:var(--muted);font-weight:700}
+.tog{display:block}
+details.more{margin:6px 18px 18px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+details.more summary{padding:14px 18px;cursor:pointer;font-weight:700}
+details.more .kpis{border-bottom:0}
+.more-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:18px;border-top:1px solid var(--line)}
+@media (max-width:760px){.more-body{grid-template-columns:1fr}}
+.privacy-line{margin-top:12px;font-size:.85rem;color:var(--muted);text-align:center}
+@media (max-width:560px){.sub-row .tog-wrap{grid-row:1;grid-column:3}}
 @keyframes drip{0%{transform:translateY(-2px) scaleY(.8);opacity:0}30%{opacity:1}100%{transform:translateY(8px) scaleY(1.1);opacity:0}}
 .logo .dropani{animation:drip 2.4s ease-in infinite;transform-origin:center top}
 @keyframes rise{from{transform:translateY(6px)}to{transform:none}}
@@ -299,7 +342,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
       УТЕЧКА
     </a>
     <div class="links">
-      <a href="#demo">Демо</a><a href="#how">Как работает</a><a href="#money">Бизнес</a><a href="#road">Роадмап</a><a href="#plan">План на 30 дней</a>
+      <a href="#demo">Проверить</a><a href="#how">Как работает</a><a href="#money">Для инвесторов</a><a href="#road">Роадмап</a><a href="#plan">План на 30 дней</a>
     </div>
     <div class="nav-r">
       <a class="acc-chip" id="accChip" href="#cabinet" hidden></a>
@@ -320,7 +363,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
       <h1 style="margin-top:14px">Ваши деньги утекают <span class="drip">по 1 990 ₸</span></h1>
       <p class="lede">Забытые подписки, «пробный период за 1 ₸», тихие подорожания и три онлайн-кинотеатра, где вы смотрите один. Утечка читает банковскую выписку, находит каждую регулярную утечку и показывает, как её закрыть.</p>
       <div class="ctas">
-        <a class="btn primary" href="#demo">Найти утечки за 10 секунд</a>
+        <a class="btn primary" href="#demo">Проверить свою выписку</a>
         <a class="btn ghost" href="#money">Смотреть питч</a>
       </div>
       <p class="note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Выписка обрабатывается в браузере и никуда не отправляется</p>
@@ -346,55 +389,43 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section class="block band" id="demo">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">Рабочий MVP</div>
-      <h2>Загрузите выписку или посмотрите на примере</h2>
-      <p>Подходят PDF-выписки Kaspi и Halyk, а также CSV из Freedom, Jusan, Forte и любые таблицы с колонками «дата», «сумма», «описание». Сейчас открыта пример-выписка Айдара за 7 месяцев, это не ваши данные.</p>
+      <div class="eyebrow">Проверьте свои подписки</div>
+      <h2>Узнайте за минуту, за что вы платите зря</h2>
     </div>
 
-    <div class="app" id="app">
-      <div class="app-bar">
-        <div style="display:flex;gap:14px;align-items:center;min-width:0">
-          <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
-          <div class="file" id="fileName">пример_выписка_айдар.csv</div>
-        </div>
-        <div class="app-tools">
-          <button class="btn ghost small" id="btnDemo" type="button">Пример</button>
-          <button class="btn ghost small" id="btnPaste" type="button">Вставить текст</button>
-          <label class="btn primary small" for="fileInput" style="cursor:pointer">Загрузить PDF или CSV</label>
-          <input type="file" id="fileInput" accept=".pdf,.csv,.txt,application/pdf,text/csv" hidden>
-        </div>
-      </div>
+    <ol class="steps3">
+      <li><b>Скачайте выписку</b><span>В Kaspi: Kaspi Gold → Выписка → выберите 3–6 месяцев → скачайте PDF.</span></li>
+      <li><b>Загрузите файл сюда</b><span>Выписка никуда не отправляется: всё считается прямо на вашем устройстве.</span></li>
+      <li><b>Посмотрите, что отменить</b><span>Покажем лишние подписки и сколько денег вы сэкономите.</span></li>
+    </ol>
 
-      <div class="drop" id="drop">
-        <p><b>Перетащите сюда PDF-выписку Kaspi или CSV-файл.</b> В Kaspi: Kaspi Gold → Выписка → выберите период → скачайте PDF. Достаточно 3–6 месяцев.</p>
-        <span class="pill mute" id="parseInfo">—</span>
+    <div class="app" id="app">
+      <div class="upload" id="drop">
+        <label class="btn primary big" for="fileInput">Выбрать выписку</label>
+        <input type="file" id="fileInput" accept=".pdf,.csv,.txt,application/pdf,text/csv" hidden>
+        <p class="status">PDF из Kaspi или Halyk, или CSV-файл. Можно просто перетащить файл сюда.</p>
+        <p class="status"><button class="linkbtn" id="btnPaste" type="button">Вставить текст выписки</button> · <button class="linkbtn" id="btnDemo" type="button">Показать пример</button></p>
+        <p class="status file-line"><span id="fileName"></span> · <span id="parseInfo">—</span></p>
       </div>
       <div class="paste" id="pasteBox" hidden>
-        <textarea id="pasteArea" spellcheck="false" placeholder="Текст из PDF Kaspi:&#10;05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS&#10;&#10;или CSV:&#10;Дата;Описание;Сумма&#10;05.10.2026;YANDEX*PLUS;-2290,00"></textarea>
-        <div class="row"><button class="btn primary small" id="btnAnalyze" type="button">Найти утечки</button><button class="btn ghost small" id="btnShowDemoCsv" type="button">Показать формат примера</button></div>
+        <textarea id="pasteArea" spellcheck="false"></textarea>
+        <div class="row"><button class="btn primary small" id="btnAnalyze" type="button">Проверить</button><button class="btn ghost small" id="btnShowDemoCsv" type="button">Показать формат примера</button></div>
       </div>
-      <div class="err" id="err" hidden></div>
+      <div class="err" id="err" role="alert" hidden></div>
 
-      <div class="kpis">
-        <div class="kpi"><div class="eyebrow">Регулярных платежей</div><div class="v" id="kCount">0</div><div class="s" id="kCountS">&nbsp;</div></div>
-        <div class="kpi"><div class="eyebrow">Подписки в месяц</div><div class="v" id="kMonth">0 ₸</div><div class="s">без обязательных</div></div>
-        <div class="kpi"><div class="eyebrow">Подписки в год</div><div class="v" id="kYear">0 ₸</div><div class="s" id="kYearS">&nbsp;</div></div>
-        <div class="kpi leak"><div class="eyebrow" style="color:var(--leak)">Утечка в год</div><div class="v" id="kLeak">0 ₸</div><div class="s" id="kLeakS">&nbsp;</div></div>
-      </div>
+      <div class="example-note" id="exampleNote">Сейчас показан пример выписки, это не ваши данные. Чтобы проверить свои подписки, нажмите «Выбрать выписку».</div>
+      <div class="verdict" id="verdict" aria-live="polite"></div>
+      <div id="subs"></div>
 
-      <div class="app-body">
-        <div class="list">
-          <div class="list-head">
-            <h3>Что нашли</h3>
-            <div class="seg" role="group" aria-label="Фильтр">
-              <button type="button" data-f="all" aria-pressed="true">Все</button>
-              <button type="button" data-f="leak" aria-pressed="false">Утечки</button>
-              <button type="button" data-f="ok" aria-pressed="false">Обязательные</button>
-            </div>
-          </div>
-          <div id="subs"></div>
+      <details class="more">
+        <summary>Подробная статистика</summary>
+        <div class="kpis">
+          <div class="kpi"><div class="eyebrow">Регулярных платежей</div><div class="v" id="kCount">0</div><div class="s" id="kCountS">&nbsp;</div></div>
+          <div class="kpi"><div class="eyebrow">Подписки в месяц</div><div class="v" id="kMonth">0 ₸</div><div class="s">без обязательных</div></div>
+          <div class="kpi"><div class="eyebrow">Подписки в год</div><div class="v" id="kYear">0 ₸</div><div class="s" id="kYearS">&nbsp;</div></div>
+          <div class="kpi leak"><div class="eyebrow" style="color:var(--leak)">Утечка в год</div><div class="v" id="kLeak">0 ₸</div><div class="s" id="kLeakS">&nbsp;</div></div>
         </div>
-        <aside class="side">
+        <div class="more-body">
           <div class="chart">
             <div class="eyebrow" style="margin-bottom:8px">Подписки по месяцам</div>
             <div id="chart"></div>
@@ -404,18 +435,18 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
             <div class="eyebrow" style="margin-bottom:10px">По категориям, в месяц</div>
             <div class="cats" id="cats"></div>
           </div>
-          <div class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><span>Анализ идёт локально в вашем браузере. Мы не просим логин от банка и не храним выписки.</span></div>
-        </aside>
-      </div>
+        </div>
+      </details>
 
       <div class="savebar">
         <div>
           <div class="big" id="saveBig">0 ₸ в год</div>
           <div class="sm" id="saveSm">Отметьте подписки, которые хотите отменить</div>
         </div>
-        <button class="btn small" id="btnPlan" type="button">Скопировать план отмены</button>
+        <button class="btn small" id="btnPlan" type="button">Скопировать список</button>
       </div>
     </div>
+    <p class="privacy-line">Выписка обрабатывается в браузере и никуда не отправляется</p>
 
     <div class="cab" id="cabinet" aria-live="polite"></div>
   </div>
@@ -438,7 +469,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section class="block band" id="money">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">Питч</div>
+      <div class="eyebrow">Для инвесторов</div>
       <h2>Проблема, рынок и как на этом зарабатывать</h2>
     </div>
 
@@ -577,7 +608,24 @@ const L=(ru,kk,en)=>[ru,kk,en][LI()];
 const LOC=()=>L("ru-RU","kk-KZ","en-GB");
 const DICT={
 "Утечка — наверх":["Утечка — жоғарыға","Utechka — back to top"],
-"Демо":["Демо","Demo"],
+"Проверить":["Тексеру","Check"],
+"Для инвесторов":["Инвесторларға","For investors"],
+"Проверить свою выписку":["Өз үзіндіңізді тексеру","Check your statement"],
+"Проверьте свои подписки":["Жазылымдарыңызды тексеріңіз","Check your subscriptions"],
+"Узнайте за минуту, за что вы платите зря":["Бір минутта неге бекер төлейтініңізді біліңіз","Find out in a minute what you are paying for for nothing"],
+"Скачайте выписку":["Үзіндіні жүктеп алыңыз","Download your statement"],
+"В Kaspi: Kaspi Gold → Выписка → выберите 3–6 месяцев → скачайте PDF.":["Kaspi-де: Kaspi Gold → Үзінді → 3–6 айды таңдаңыз → PDF жүктеңіз.","In Kaspi: Kaspi Gold → Statement → pick 3–6 months → download the PDF."],
+"Загрузите файл сюда":["Файлды осында жүктеңіз","Upload the file here"],
+"Выписка никуда не отправляется: всё считается прямо на вашем устройстве.":["Үзінді ешқайда жіберілмейді: бәрі тікелей сіздің құрылғыңызда есептеледі.","Your statement is never sent anywhere: everything is calculated right on your device."],
+"Посмотрите, что отменить":["Нені тоқтату керегін көріңіз","See what to cancel"],
+"Покажем лишние подписки и сколько денег вы сэкономите.":["Артық жазылымдарды және қанша ақша үнемдейтініңізді көрсетеміз.","We show the subscriptions you don't need and how much you'll save."],
+"Выбрать выписку":["Үзіндіні таңдау","Choose a statement"],
+"PDF из Kaspi или Halyk, или CSV-файл. Можно просто перетащить файл сюда.":["Kaspi немесе Halyk PDF-і, не CSV файл. Файлды осында жай сүйреп әкелуге болады.","A PDF from Kaspi or Halyk, or a CSV file. You can also just drag the file here."],
+"Вставить текст выписки":["Үзінді мәтінін қою","Paste statement text"],
+"Показать пример":["Үлгіні көрсету","Show an example"],
+"Сейчас показан пример выписки, это не ваши данные. Чтобы проверить свои подписки, нажмите «Выбрать выписку».":["Қазір үлгі үзінді көрсетілген, бұл сіздің деректеріңіз емес. Өз жазылымдарыңызды тексеру үшін «Үзіндіні таңдау» батырмасын басыңыз.","This is an example statement, not your data. To check your own subscriptions, press “Choose a statement”."],
+"Подробная статистика":["Толық статистика","Detailed stats"],
+"Скопировать список":["Тізімді көшіру","Copy the list"],
 "Как работает":["Қалай жұмыс істейді","How it works"],
 "Бизнес":["Бизнес","Business"],
 "Роадмап":["Жол картасы","Roadmap"],
@@ -747,7 +795,7 @@ const NAMES={"Яндекс Плюс":[0,"Yandex Plus"],"Кинопоиск":[0,"
 const nm=n=>{const v=NAMES[n];if(!v||LANG==="ru")return n;const t=v[LI()-1];return t||n};
 const STEPS={"Профиль":["Профиль","Profile"],"Подписки":["Жазылымдар","Subscriptions"],"Подписка":["Жазылым","Subscription"],"Отключить автопродление":["Автожаңартуды өшіріңіз","Turn off auto-renewal"],
  "Настройки":["Баптаулар","Settings"],"Отменить":["Бас тартыңыз","Cancel"],"Отключить":["Өшіріңіз","Turn off"],"Отменить подписку":["Жазылымнан бас тартыңыз","Cancel subscription"],
- "Управление подпиской":["Жазылымды басқару","Manage subscription"],"Управление подписками":["Жазылымдарды басқару","Manage subscriptions"],"Аккаунт":["Аккаунт","Account"],"Плюс":["Плюс","Plus"],
+ "Управление подпиской":["Жазылымды басқару","Manage subscription"],"Управление подписками":["Жазылымдарды басқару","Manage subscriptions"],"Аккаунт":["Аккаунт","Account"],"Управление тарифом":["Тарифті басқару","Manage plan"],"Оплата":["Төлем","Billing"],"Отменить (проверьте штраф за досрочную отмену)":["Бас тартыңыз (мерзімінен бұрын бас тарту айыппұлын тексеріңіз)","Cancel (check the early termination fee)"],"Перейти на бесплатный":["Тегін тарифке ауысыңыз","Switch to the free plan"],"Плюс":["Плюс","Plus"],
  "Приложение Яндекс":["Яндекс қосымшасы","Yandex app"],"Тарифы":["Тарифтер","Plans"],"Услуги":["Қызметтер","Services"],"Личный кабинет оператора":["Оператордың жеке кабинеті","Carrier account page"],
  "Сервисы":["Сервистер","Services"],"VK Музыка":["VK Музыка","VK Music"],"Настройки iPhone":["iPhone баптаулары","iPhone Settings"],"Ваше имя":["Сіздің атыңыз","Your name"],
  "Настройки консоли":["Консоль баптаулары","Console settings"],"Управление (через App Store / Google Play)":["Басқару (App Store / Google Play арқылы)","Manage (via App Store / Google Play)"],
@@ -780,7 +828,6 @@ function applyLang(){
     node.nodeValue=lead+DICT[k][LI()-1]+trail;
   }
   $(".logo").setAttribute("aria-label",L("Утечка — наверх","Утечка — жоғарыға","Utechka — back to top"));
-  $(".list-head .seg").setAttribute("aria-label",L("Фильтр","Сүзгі","Filter"));
   $("#langSeg").setAttribute("aria-label",L("Язык","Тіл","Language"));
   $("#pasteArea").placeholder=L("Текст из PDF Kaspi:\n05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS\n\nили CSV:\nДата;Описание;Сумма\n05.10.2026;YANDEX*PLUS;-2290,00",
     "Kaspi PDF мәтіні:\n05.10.26 - 2 290,00 ₸ Покупки YANDEX*PLUS\n\nнемесе CSV:\nДата;Описание;Сумма\n05.10.2026;YANDEX*PLUS;-2290,00",
@@ -803,16 +850,16 @@ const CATALOG=[
  [/wink/,"Wink",["video"],"wink.ru → Настройки → Управление подписками"],
  [/amediateka|амедиатека/,"Амедиатека",["video"],"amediateka.ru → Профиль → Подписка"],
  [/premier|премьер/,"PREMIER",["video"],"premier.one → Профиль → Подписки"],
- [/netflix/,"Netflix",["video"],"Account → Cancel membership"],
+ [/netflix/,"Netflix",["video"],"netflix.com → Аккаунт → Отменить подписку"],
  [/youtube/,"YouTube Premium",["video","music"],"youtube.com/paid_memberships → Отменить"],
  [/yandex.?music|яндекс.?музык/,"Яндекс Музыка",["music"],"music.yandex.kz → Настройки → Подписка → Отменить"],
  [/apple.?music/,"Apple Music",["music"],"Настройки iPhone → Ваше имя → Подписки → Apple Music"],
  [/vk.?(music|музык)|вк.?музык|boom/,"VK Музыка",["music"],"VK → Сервисы → Подписки → VK Музыка → Отключить"],
- [/spotify/,"Spotify",["music"],"Account → Manage plan → Cancel"],
+ [/spotify/,"Spotify",["music"],"spotify.com → Аккаунт → Управление тарифом → Отменить"],
  [/zvuk|звук/,"Звук",["music"],"zvuk.com → Профиль → Подписка"],
- [/openai|chatgpt/,"ChatGPT Plus",["ai"],"chatgpt.com → Settings → Subscription → Cancel"],
- [/anthropic|claude/,"Claude",["ai"],"claude.ai → Settings → Billing → Cancel"],
- [/midjourney/,"Midjourney",["ai"],"midjourney.com/account → Cancel plan"],
+ [/openai|chatgpt/,"ChatGPT Plus",["ai"],"chatgpt.com → Настройки → Подписка → Отменить"],
+ [/anthropic|claude/,"Claude",["ai"],"claude.ai → Настройки → Оплата → Отменить"],
+ [/midjourney/,"Midjourney",["ai"],"midjourney.com/account → Отменить подписку"],
  [/telegram/,"Telegram Premium",["msg"],"Telegram → Настройки → Premium → Управление (через App Store / Google Play)"],
  [/google.?(one|storage)/,"Google One",["cloud"],"one.google.com → Настройки → Отменить подписку"],
  [/icloud|apple\.com|itunes/,"Apple",["cloud"],"Настройки iPhone → Ваше имя → Подписки"],
@@ -820,9 +867,9 @@ const CATALOG=[
  [/litres|литрес/,"Литрес",["books"],"litres.ru → Профиль → Подписка → Отменить"],
  [/bookmate|букмейт|storytel|яндекс.?книг|yandex.?books/,"Яндекс Книги",["books"],"Профиль → Подписки → Отменить"],
  [/invictus|fitness|фитнес|world.?class|gym|спортзал|1fit/,"Фитнес-клуб",["fit"],"Обратиться на ресепшен или в приложение клуба, взять подтверждение о расторжении"],
- [/adobe/,"Adobe",["soft"],"account.adobe.com → Plans → Cancel (проверьте штраф за досрочную отмену)"],
- [/microsoft|office ?365/,"Microsoft 365",["soft"],"account.microsoft.com → Services → Cancel"],
- [/notion/,"Notion",["soft"],"Settings → Plans → Downgrade"],
+ [/adobe/,"Adobe",["soft"],"account.adobe.com → Тарифы → Отменить (проверьте штраф за досрочную отмену)"],
+ [/microsoft|office ?365/,"Microsoft 365",["soft"],"account.microsoft.com → Услуги → Отменить"],
+ [/notion/,"Notion",["soft"],"notion.so → Настройки → Тарифы → Перейти на бесплатный"],
  [/discord|nitro/,"Discord Nitro",["games"],"Настройки → Подписки → Отменить"],
  [/playstation|psn|xbox|game.?pass/,"Игровая подписка",["games"],"Настройки консоли → Подписки"],
  [/beeline|билайн|kcell|activ|tele2|теле2|altel|алтел|\bizi\b/,"Мобильная связь",["tel"],null,true],
@@ -1100,13 +1147,76 @@ ${start} я оформил(а) пробный период за ${trialA}. По�
 С уважением, [ФИО], [телефон / e-mail аккаунта]`;
 }
 
+/* причина простыми словами: почему подписка попала в свою группу */
+function reasonText(s){
+  if(s.essential)return L("Обязательный платёж: связь, коммуналка или интернет. Его мы не считаем лишним.","Міндетті төлем: байланыс, коммуналдық немесе интернет. Оны артық деп санамаймыз.","An essential payment: phone, utilities or internet. We don't count it as waste.");
+  const out=[];
+  for(const f of s.flags){
+    if(f.k==="trial")out.push(L(`${fmtD(s.trial.d)} вы подключили пробный период за ${tg(s.trial.a)}, а теперь каждый месяц списывается ${tg(s.last)}. Деньги можно попробовать вернуть: письмо ниже.`,
+      `${fmtD(s.trial.d)} күні ${tg(s.trial.a)}-лік сынақ мерзімін қостыңыз, енді ай сайын ${tg(s.last)} шегеріледі. Ақшаны қайтаруға болады: хат төменде.`,
+      `On ${fmtD(s.trial.d)} you started a ${tg(s.trial.a)} trial, and now ${tg(s.last)} is charged every month. You can try to get the money back: the letter is below.`));
+    if(f.k==="dup")out.push(L(`У вас уже есть ${nm(f.with)}, и в нём есть ${catName(f.cat).toLowerCase()}. Платить ещё и сюда не нужно.`,
+      `Сізде ${nm(f.with)} бар, ал онда ${catName(f.cat).toLowerCase()} бар. Бұған қосымша төлеудің қажеті жоқ.`,
+      `You already have ${nm(f.with)}, which includes ${catName(f.cat).toLowerCase()}. No need to pay for this too.`));
+    if(f.k==="up")out.push(L(`Подорожала: было ${tg(s.first)}, стало ${tg(s.last)}.`,`Қымбаттады: ${tg(s.first)} болған, енді ${tg(s.last)}.`,`Price went up: was ${tg(s.first)}, now ${tg(s.last)}.`));
+    if(f.k==="unk")out.push(L("Мы не знаем этот сервис. Проверьте, пользуетесь ли вы им.","Бұл сервисті білмейміз. Оны пайдаланатыныңызды тексеріңіз.","We don't recognise this service. Check whether you still use it."));
+    if(f.k==="off")out.push(L(`Последнее списание было ${fmtD(s.dates[s.dates.length-1])}. Похоже, вы её уже отменили.`,`Соңғы төлем ${fmtD(s.dates[s.dates.length-1])} болды. Сіз оны тоқтатқан сияқтысыз.`,`The last charge was on ${fmtD(s.dates[s.dates.length-1])}. Looks like you already cancelled it.`));
+  }
+  if(!s.leak&&s.keepNote)out.push(L(`Её стоит оставить: выгоднее всего, и в ней есть ${s.keepNote.map(x=>catName(x).toLowerCase()).join(" и ")}.`,
+    `Оны қалдырған жөн: ең тиімдісі, әрі онда ${s.keepNote.map(x=>catName(x).toLowerCase()).join(" мен ")} бар.`,
+    `Worth keeping: it's the best deal and includes ${s.keepNote.map(x=>catName(x).toLowerCase()).join(" and ")}.`));
+  if(!out.length)out.push(L(`Списывается ${per(s.period,0)}. Если пользуетесь, оставьте.`,`${per(s.period,0)} шегеріледі. Пайдалансаңыз, қалдырыңыз.`,`Charged ${per(s.period,0)}. Keep it if you use it.`));
+  return out.join(" ");
+}
+function groupOf(s){
+  if(s.essential)return "ess";
+  if(!s.active)return "off";
+  if(s.leak)return "cancel";
+  if(s.flags.some(f=>f.k==="up"||f.k==="unk"))return "check";
+  return "keep";
+}
+const GROUPS=[
+  ["cancel",()=>L("Можно отменить","Тоқтатуға болады","You can cancel"),()=>L("Эти подписки дублируют то, что у вас уже есть, или включились после пробного периода. Мы уже отметили их переключателем.","Бұл жазылымдар сізде бар нәрсені қайталайды немесе сынақ мерзімінен кейін қосылған. Біз оларды ауыстырғышпен белгілеп қойдық.","These duplicate what you already have or switched on after a trial. We've already ticked them.")],
+  ["check",()=>L("Проверьте","Тексеріңіз","Worth checking"),()=>L("Подорожали или незнакомые. Решите сами, нужны ли они.","Қымбаттаған немесе бейтаныс. Керек-керек еместігін өзіңіз шешіңіз.","Got pricier or unfamiliar. Decide whether you need them.")],
+  ["keep",()=>L("Можно оставить","Қалдыруға болады","Fine to keep"),()=>L("С ними всё в порядке, если вы ими пользуетесь.","Пайдалансаңыз, бұлармен бәрі дұрыс.","These are fine if you use them.")],
+  ["ess",()=>L("Обязательные платежи","Міндетті төлемдер","Essential payments"),()=>L("Связь, коммуналка, интернет. Показываем для полноты картины.","Байланыс, коммуналдық, интернет. Толық көрініс үшін көрсетеміз.","Phone, utilities, internet. Shown for the full picture.")],
+  ["off",()=>L("Уже не списываются","Енді шегерілмейді","No longer charged"),()=>L("Раньше платили регулярно, но последние месяцы списаний нет.","Бұрын тұрақты төлегенсіз, бірақ соңғы айларда төлем жоқ.","You used to pay regularly, but there have been no charges recently.")]
+];
+
+function subRow(s,i){
+  const c=s.cats[0],on=state.sel.has(s.key),op=state.open.has(s.key),name=nm(s.name),g=groupOf(s);
+  const canToggle=g==="cancel"||g==="check"||g==="keep";
+  let detail="";
+  if(op){
+    const steps=s.cancel?s.cancel.split(" → ").map((x,j)=>(j===0?L("Откройте ","Ашыңыз: ","Open "):"")+step(x))
+      :[L("Найдите сервис в приложении банка → Карта → Подписки","Банк қосымшасында сервисті табыңыз → Карта → Жазылымдар","Find the service in your bank app → Card → Subscriptions"),L("или напишите в поддержку продавца «"+s.raw+"» с требованием отключить автосписание","немесе «"+s.raw+"» сатушысының қолдау қызметіне автотөлемді өшіруді талап етіп жазыңыз","or write to the merchant “"+s.raw+"” support and demand they stop auto-charging")];
+    const nH=s.history.length,mx=Math.max(...s.history);
+    detail=`<div class="sub-detail">
+      ${!s.essential&&s.active?`<div><div class="eyebrow" style="margin-bottom:6px">${L("Как отменить","Қалай тоқтатуға болады","How to cancel")}</div><ol class="steps">${steps.map(x=>"<li>"+esc(x)+"</li>").join("")}<li>${L("Через 2 дня после даты списания проверьте, что новых платежей нет","Төлем күнінен 2 күн өткен соң жаңа төлем жоқ екенін тексеріңіз","2 days after the charge date, check that no new payment went through")}</li></ol></div>`:""}
+      ${s.trial?`<div><div class="eyebrow" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px">${L("Письмо для возврата денег","Ақшаны қайтаруға арналған хат","Refund letter")} <button class="btn ghost small" data-copy="${esc(s.key)}" type="button">${L("Скопировать","Көшіру","Copy")}</button></div><div class="letter">${esc(letterFor(s))}</div></div>`:""}
+      <div><div class="eyebrow" style="margin-bottom:6px">${L("Списания в выписке","Үзіндідегі төлемдер","Charges in the statement")}: ${nH} · ${esc(s.raw)}</div><div class="hist">${s.history.map((a,j)=>'<i class="'+(s.trial&&j===0?"first":"")+'" style="height:'+Math.max(6,a/mx*100)+'%" title="'+tg(a)+'"></i>').join("")}</div></div>
+    </div>`;
+  }
+  const more=op?L("Скрыть","Жасыру","Hide"):(!s.essential&&s.active?L("Как отменить","Қалай тоқтату","How to cancel"):L("Подробнее","Толығырақ","Details"));
+  return `<div class="sub" style="animation-delay:${Math.min(i,10)*30}ms">
+    <div class="sub-row">
+      <div class="ava" style="background:${CAT_COLOR[c]}">${esc(initials(name))}</div>
+      <div class="sub-main"><div class="sub-name">${esc(name)}</div><div class="sub-meta">${s.cats.map(catName).join(" · ")} · ${per(s.period,0)}</div>
+        <p class="reason">${esc(reasonText(s))}</p>
+        <button class="linkbtn" type="button" data-open="${esc(s.key)}" aria-expanded="${op}">${more}</button></div>
+      <div class="sub-amt"><div class="m">${tg(s.last)}</div><div class="y">${tg(s.yearly)}/${L("год","жыл","yr")}</div></div>
+      ${canToggle?`<label class="tog-wrap"><span class="tog"><input type="checkbox" data-sel="${esc(s.key)}" ${on?"checked":""} aria-label="${esc(L("Отменю ","Тоқтатамын: ","I'll cancel ")+name)}"><span></span></span><small>${L("Отменю","Тоқтатамын","Cancel")}</small></label>`:'<span></span>'}
+    </div>${detail}</div>`;
+}
+
 function render(){
   const {subs}=state;
   const nonEss=subs.filter(s=>s.active&&!s.essential);
   const month=nonEss.reduce((a,s)=>a+s.monthly,0);
-  const leakY=subs.filter(s=>s.leak).reduce((a,s)=>a+s.yearly,0);
-  const nLeak=subs.filter(s=>s.leak).length,nEss=subs.filter(s=>s.essential).length;
+  const leaks=subs.filter(s=>s.leak),leakM=leaks.reduce((a,s)=>a+s.monthly,0),leakY=leakM*12;
+  const nLeak=leaks.length,nEss=subs.filter(s=>s.essential).length;
   $("#fileName").textContent=state.file===null?DEMO_NAME():state.file;
+  $("#exampleNote").hidden=state.file!==null;
   $("#kCount").textContent=subs.filter(s=>s.active).length;
   $("#kCountS").textContent=L(nonEss.length+" "+plural(nonEss.length,"подписка","подписки","подписок")+", "+nEss+" "+plural(nEss,"обязательный","обязательных","обязательных"),
     nonEss.length+" жазылым, "+nEss+" міндетті",cnt(nonEss.length,[],"","subscription")+", "+nEss+" essential");
@@ -1117,37 +1227,23 @@ function render(){
   $("#kLeakS").textContent=nLeak?L(nLeak+" "+plural(nLeak,"подписка","подписки","подписок")+" к отмене",nLeak+" жазылымнан бас тарту керек",cnt(nLeak,[],"","subscription")+" to cancel"):L("утечек не нашли","шығын табылмады","no leaks found");
   $("#heroLeak").textContent="≈ "+tg(leakY);
 
-  const vis=subs.filter(s=>state.filter==="all"||(state.filter==="leak"?s.leak||s.flags.some(f=>f.k==="up"):s.essential));
-  const box=$("#subs");
-  if(!vis.length){box.innerHTML='<div class="essentials-note">'+(subs.length?L("В этом фильтре пусто.","Бұл сүзгіде ештеңе жоқ.","Nothing in this filter."):L("Регулярных платежей не найдено. Нужна выписка минимум за 2–3 месяца.","Тұрақты төлемдер табылмады. Кемінде 2–3 айлық үзінді керек.","No recurring payments found. You need a statement covering at least 2–3 months."))+'</div>';}
-  else box.innerHTML=vis.map((s,i)=>{
-    const c=s.cats[0],on=state.sel.has(s.key),op=state.open.has(s.key),name=nm(s.name);
-    const pills=(s.essential?['<span class="pill ok">'+L("Обязательный платёж","Міндетті төлем","Essential payment")+'</span>']:[])
-      .concat(s.flags.map(f=>'<span class="pill '+f.t+'">'+esc(flagLabel(f,s))+'</span>'))
-      .concat(s.keepNote&&!s.leak?['<span class="pill ok">'+esc(L("Оставить: лучшая цена за ","Қалдыру: ең тиімді баға — ","Keep: best price for ")+s.keepNote.map(x=>catName(x).toLowerCase()).join(L(" и "," мен "," and ")))+'</span>']:[]);
-    const mx=Math.max(...s.history);
-    let detail="";
-    if(op){
-      const nH=s.history.length,lastD=fmtD(s.dates[s.dates.length-1]);
-      const why=s.essential?L("Регулярный обязательный платёж. Мы его показываем, но не считаем утечкой.","Тұрақты міндетті төлем. Біз оны көрсетеміз, бірақ шығын деп санамаймыз.","A regular essential payment. We show it but don't count it as a leak.")
-        :L(`Платёж <b>${esc(s.raw)}</b> повторяется ${per(s.period,1)}, найдено ${nH} ${plural(nH,"списание","списания","списаний")}. `,`<b>${esc(s.raw)}</b> төлемі ${per(s.period,1)} қайталанады, ${nH} төлем табылды. `,`The payment <b>${esc(s.raw)}</b> repeats ${per(s.period,1)}, ${nH} charges found. `)
-         +(s.active?L("Следующее ожидается около <b>","Келесісі шамамен <b>","Next one expected around <b>")+fmtD(s.next)+L("</b>.","</b> күтіледі.","</b>."):L("Последнее было "+lastD+", новых не видно.","Соңғысы "+lastD+" болды, жаңалары жоқ.","The last one was on "+lastD+", no new ones since."));
-      const steps=s.cancel?s.cancel.split(" → ").map((x,j)=>(j===0?L("Откройте ","Ашыңыз: ","Open "):"")+step(x))
-        :[L("Найдите сервис в приложении банка → Карта → Подписки","Банк қосымшасында сервисті табыңыз → Карта → Жазылымдар","Find the service in your bank app → Card → Subscriptions"),L("или напишите в поддержку продавца «"+s.raw+"» с требованием отключить автосписание","немесе «"+s.raw+"» сатушысының қолдау қызметіне автотөлемді өшіруді талап етіп жазыңыз","or write to the merchant “"+s.raw+"” support and demand they stop auto-charging")];
-      detail=`<div class="sub-detail">
-        <div class="hist" aria-label="${L("История списаний","Төлемдер тарихы","Charge history")}">${s.history.map((a,j)=>'<i class="'+(s.trial&&j===0?"first":"")+'" style="height:'+Math.max(6,a/mx*100)+'%" title="'+tg(a)+'"></i>').join("")}</div>
-        <p class="why">${why}</p>
-        ${!s.essential?`<div><div class="eyebrow" style="margin-bottom:6px">${L("Как отменить","Қалай бас тарту керек","How to cancel")}</div><ol class="steps">${steps.map(x=>"<li>"+esc(x)+"</li>").join("")}<li>${L("Через 2 дня после даты списания проверьте, что новых платежей нет","Төлем күнінен 2 күн өткен соң жаңа төлем жоқ екенін тексеріңіз","2 days after the charge date, check that no new payment went through")}</li></ol></div>`:""}
-        ${s.trial?`<div><div class="eyebrow" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">${L("Претензия на возврат","Қайтаруға шағым","Refund claim")} <button class="btn ghost small" data-copy="${esc(s.key)}" type="button">${L("Скопировать","Көшіру","Copy")}</button></div><div class="letter">${esc(letterFor(s))}</div></div>`:""}
-      </div>`;
-    }
-    return `<div class="sub" style="animation-delay:${Math.min(i,10)*30}ms">
-      <div class="sub-row" data-open="${esc(s.key)}" role="button" tabindex="0" aria-expanded="${op}">
-        <div class="ava" style="background:${CAT_COLOR[c]}">${esc(initials(name))}</div>
-        <div class="sub-main"><div class="sub-name">${esc(name)}</div><div class="sub-meta">${s.cats.map(catName).join(" · ")} · ${per(s.period,0)}${s.variable?L(" · сумма меняется"," · сома өзгереді"," · amount varies"):""}</div><div class="pills">${pills.join("")}</div></div>
-        <div class="sub-amt"><div class="m">${tg(s.last)}</div><div class="y">${tg(s.yearly)}/${L("год","жыл","yr")}</div></div>
-        ${s.essential||!s.active?'<span></span>':`<label class="tog" title="${L("Отменить","Бас тарту","Cancel")}" onclick="event.stopPropagation()"><input type="checkbox" data-sel="${esc(s.key)}" ${on?"checked":""} aria-label="${esc(L("Отменить ","Бас тарту: ","Cancel ")+name)}"><span></span></label>`}
-      </div>${detail}</div>`;
+  // главный итог
+  let v="";
+  if(!subs.length){
+    v=`<div class="v-main">${L("Регулярных платежей не нашли","Тұрақты төлемдер табылмады","No recurring payments found")}</div><div class="v-sub">${L("Нужна выписка хотя бы за 2–3 месяца: подписку видно, только когда она списалась несколько раз.","Кемінде 2–3 айлық үзінді керек: жазылым бірнеше рет шегерілгенде ғана көрінеді.","You need a statement covering at least 2–3 months: a subscription only shows up after it has been charged several times.")}</div>`;
+  }else{
+    v=`<div class="v-main">${L("На подписки уходит","Жазылымдарға кетеді","You spend")} <b>${tg(month)}</b> ${L("в месяц","айына","a month on subscriptions")}</div>
+      <div class="v-sub">${L(`Это ${tg(month*12)} в год. Нашли ${nonEss.length} ${plural(nonEss.length,"подписку","подписки","подписок")}.`,`Бұл жылына ${tg(month*12)}. ${nonEss.length} жазылым таптық.`,`That's ${tg(month*12)} a year. We found ${cnt(nonEss.length,[],"","subscription")}.`)}</div>`;
+    v+=nLeak?`<div class="v-leak">${L(`Из них <b>${tg(leakM)} в месяц</b> вы платите зря. Это ${tg(leakY)} в год. Что отменить, написано ниже.`,`Оның ішінде <b>айына ${tg(leakM)}</b> бекер төлейсіз. Бұл жылына ${tg(leakY)}. Нені тоқтату керегі төменде жазылған.`,`Of that, <b>${tg(leakM)} a month</b> is wasted. That's ${tg(leakY)} a year. What to cancel is listed below.`)}</div>`
+      :`<div class="v-ok">${L("Лишних подписок не нашли. Всё в порядке!","Артық жазылымдар табылмады. Бәрі жақсы!","No unnecessary subscriptions found. All good!")}</div>`;
+  }
+  $("#verdict").innerHTML=v;
+
+  // группы
+  let i=0;
+  $("#subs").innerHTML=GROUPS.map(([g,title,hint])=>{
+    const list=subs.filter(s=>groupOf(s)===g);if(!list.length)return "";
+    return `<div class="grp grp-${g}"><div class="grp-h"><h3>${title()} <span class="grp-n">${list.length}</span></h3><p>${hint()}</p></div>${list.map(s=>subRow(s,i++)).join("")}</div>`;
   }).join("");
   renderSide();renderSave();
 }
@@ -1197,7 +1293,7 @@ function load(text,name){
     const lk=r.subs.find(s=>s.leak);if(lk)state.open.add(lk.key);
     lastTotal=total;infoText();
     render();
-    if(name!==null)saveAnalysis(total);else renderAcc();
+    if(name!==null){saveAnalysis(total);document.getElementById("verdict").scrollIntoView({behavior:"smooth",block:"start"})}else renderAcc();
   }catch(e){$("#err").textContent=e.message;$("#err").hidden=false}
 }
 function infoText(){$("#parseInfo").textContent=lastTotal?L("Прочитано "+lastTotal+" "+plural(lastTotal,"операция","операции","операций"),lastTotal+" операция оқылды",lastTotal+" transactions read"):"—"}
@@ -1213,7 +1309,6 @@ document.addEventListener("click",e=>{
   const f=e.target.closest("[data-f]");
   if(f){state.filter=f.dataset.f;document.querySelectorAll("[data-f]").forEach(b=>b.setAttribute("aria-pressed",b===f));render()}
 });
-document.addEventListener("keydown",e=>{const o=e.target.closest&&e.target.closest("[data-open]");if(o&&(e.key==="Enter"||e.key===" ")){e.preventDefault();o.click()}});
 document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.sel;if(k){e.target.checked?state.sel.add(k):state.sel.delete(k);renderSave();saveSel()}});
 $("#btnDemo").onclick=()=>load(demoCSV(),null);
 $("#btnPaste").onclick=()=>{$("#pasteBox").hidden=!$("#pasteBox").hidden;if(!$("#pasteBox").hidden)$("#pasteArea").focus()};
